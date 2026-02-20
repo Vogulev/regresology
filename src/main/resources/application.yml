@@ -1,9 +1,9 @@
 spring:
   application:
-    name: regresology
+    name: regreso
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:regresology}
-    username: ${DB_USER:regresology}
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:regreso}
+    username: ${DB_USER:regreso}
     password: ${DB_PASSWORD:secret}
   jpa:
     hibernate:
@@ -33,7 +33,7 @@ storage:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
-    bucket: ${MINIO_BUCKET:regresology}
+    bucket: ${MINIO_BUCKET:regreso}
 
 reminders:
   scheduler:

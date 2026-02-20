@@ -9,9 +9,9 @@
         <relativePath/>
     </parent>
     <groupId>com.vogulev</groupId>
-    <artifactId>regresology</artifactId>
+    <artifactId>regreso</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>regresology</name>
+    <name>regreso</name>
     <description>CRM для регрессологов</description>
 
     <properties>
@@ -105,6 +105,17 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
