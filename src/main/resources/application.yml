@@ -25,7 +25,7 @@ security:
 telegram:
   bot:
     token: ${TELEGRAM_BOT_TOKEN:}
-    username: ${TELEGRAM_BOT_USERNAME:RegresologyBot}
+    username: ${TELEGRAM_BOT_USERNAME:RegresoBot}
     enabled: ${TELEGRAM_BOT_ENABLED:false}
 
 storage:

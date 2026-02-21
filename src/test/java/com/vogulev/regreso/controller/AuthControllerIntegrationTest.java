@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
 import com.vogulev.regreso.dto.request.LoginRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,10 +23,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
+    @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
 
     @BeforeEach
     void cleanUp() {
+        clientRepository.deleteAll();
         practitionerRepository.deleteAll();
     }
 
@@ -224,10 +227,10 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
         void validToken_shouldPassFilter() throws Exception {
             String accessToken = registerAndGetAccessToken("filter@example.com");
 
-            // /api/clients не реализован → 404, но не 401
+            // /api/clients реализован → 200, не 401
             mockMvc.perform(get("/api/clients")
                             .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isNotFound());
+                    .andExpect(status().isOk());
         }
     }
 
