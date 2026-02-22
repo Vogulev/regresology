@@ -11,4 +11,6 @@ public interface HomeworkRepository extends JpaRepository<Homework, UUID> {
     long countByClientIdAndStatus(UUID clientId, Homework.Status status);
 
     Optional<Homework> findFirstByClientIdOrderByCreatedAtDesc(UUID clientId);
+
+    Optional<Homework> findFirstByClientIdAndStatusOrderByCreatedAtDesc(UUID clientId, Homework.Status status);
 }

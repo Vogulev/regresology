@@ -41,6 +41,9 @@ public class Practitioner {
     @Builder.Default
     private Integer defaultSessionDurationMin = 120;
 
+    @Builder.Default
+    private Integer inactiveClientReminderDays = 0;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Plan plan = Plan.FREE;

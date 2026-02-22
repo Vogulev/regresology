@@ -78,6 +78,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Telegram Bot -->
+        <dependency>
+            <groupId>org.telegram</groupId>
+            <artifactId>telegrambots</artifactId>
+            <version>6.9.7.1</version>
+        </dependency>
+
         <!-- Утилиты -->
         <dependency>
             <groupId>org.mapstruct</groupId>
