@@ -6,6 +6,8 @@ import com.vogulev.regreso.dto.request.ClientRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
+import com.vogulev.regreso.repository.ReminderRepository;
+import com.vogulev.regreso.repository.SessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,9 +29,13 @@ class ClientControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired JsonMapper objectMapper;
     @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
+    @Autowired SessionRepository sessionRepository;
+    @Autowired ReminderRepository reminderRepository;
 
     @BeforeEach
     void cleanUp() {
+        reminderRepository.deleteAll();
+        sessionRepository.deleteAll();
         clientRepository.deleteAll();
         practitionerRepository.deleteAll();
     }
