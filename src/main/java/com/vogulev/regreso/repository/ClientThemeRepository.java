@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ClientThemeRepository extends JpaRepository<ClientTheme, UUID> {
@@ -15,4 +16,8 @@ public interface ClientThemeRepository extends JpaRepository<ClientTheme, UUID> 
 
     @Query("SELECT COUNT(ts) FROM ThemeSession ts WHERE ts.id.themeId = :themeId")
     int countSessionsByThemeId(@Param("themeId") UUID themeId);
+
+    List<ClientTheme> findByClientIdAndPractitionerIdOrderByCreatedAtDesc(UUID clientId, UUID practitionerId);
+
+    Optional<ClientTheme> findByIdAndPractitionerId(UUID id, UUID practitionerId);
 }
