@@ -1,5 +1,6 @@
 package com.vogulev.regreso.service.impl;
 
+import com.vogulev.regreso.ai.AiSummaryService;
 import com.vogulev.regreso.dto.request.CancelSessionRequest;
 import com.vogulev.regreso.dto.request.CreateSessionRequest;
 import com.vogulev.regreso.dto.request.UpdateSessionRequest;
@@ -34,6 +35,7 @@ public class SessionServiceImpl implements SessionService {
     private final HomeworkRepository homeworkRepository;
     private final SessionMapper sessionMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final AiSummaryService aiSummaryService;
 
     @Override
     public SessionResponse createSession(CreateSessionRequest request, UUID practitionerId) {
@@ -196,13 +198,18 @@ public class SessionServiceImpl implements SessionService {
     public SessionSummaryStatusResponse getSessionSummary(UUID sessionId, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
 
-        // AI-саммари не реализовано — всегда возвращаем PENDING
+        boolean ready = session.getAiSummary() != null;
         return SessionSummaryStatusResponse.builder()
                 .sessionId(session.getId())
-                .status("PENDING")
-                .summary(null)
-                .generatedAt(null)
+                .status(ready ? "READY" : "PENDING")
+                .summary(session.getAiSummary())
+                .generatedAt(session.getAiSummaryGeneratedAt())
                 .build();
+    }
+
+    @Override
+    public void triggerSessionSummaryGeneration(UUID sessionId, UUID practitionerId) {
+        aiSummaryService.triggerSessionSummary(sessionId, practitionerId);
     }
 
     // ── private helpers ───────────────────────────────────────────────────────

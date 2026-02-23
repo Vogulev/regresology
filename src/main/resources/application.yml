@@ -38,3 +38,13 @@ storage:
 reminders:
   scheduler:
     cron: "0 * * * * *"
+
+ai:
+  provider: ${AI_PROVIDER:gemini}
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    api-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+    model: gemini-1.5-flash
+  summary:
+    min-prompt-length: 100
+    regenerate-cooldown-minutes: 60

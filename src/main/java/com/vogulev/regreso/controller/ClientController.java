@@ -78,4 +78,12 @@ public class ClientController {
             @AuthenticationPrincipal PractitionerDetails user) {
         return ResponseEntity.ok(clientService.getClientSessions(id, user.getId()));
     }
+
+    @PostMapping("/{id}/summary/generate")
+    public ResponseEntity<Void> triggerClientSummary(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal PractitionerDetails user) {
+        clientService.triggerClientSummaryGeneration(id, user.getId());
+        return ResponseEntity.accepted().build();
+    }
 }

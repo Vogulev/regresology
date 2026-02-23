@@ -29,4 +29,7 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     Integer getNextSessionNumber(@Param("clientId") UUID clientId);
 
     List<Session> findTop3ByClientIdOrderByScheduledAtDesc(UUID clientId);
+
+    @Query("SELECT s FROM Session s WHERE s.client.id = :clientId AND s.status = 'COMPLETED' AND s.aiSummary IS NOT NULL ORDER BY s.scheduledAt DESC LIMIT 10")
+    List<Session> findTop10CompletedWithSummaryByClientId(@Param("clientId") UUID clientId);
 }

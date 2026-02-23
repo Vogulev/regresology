@@ -1,0 +1,6 @@
+ai:
+  provider: gemini
+  gemini:
+    api-key: AIzaSyBO1-xraqy52fqtvK20Yl1OsZ0WC7Vlt4w
+    api-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+    model: gemini-1.5-flash

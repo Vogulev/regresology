@@ -24,4 +24,6 @@ public interface SessionService {
     SessionPrepResponse getSessionPrep(UUID sessionId, UUID practitionerId);
 
     SessionSummaryStatusResponse getSessionSummary(UUID sessionId, UUID practitionerId);
+
+    void triggerSessionSummaryGeneration(UUID sessionId, UUID practitionerId);
 }

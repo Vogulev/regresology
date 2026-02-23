@@ -88,6 +88,12 @@ public class Session {
     @Column(columnDefinition = "TEXT") private String practitionerNotes;
     @Column(columnDefinition = "TEXT") private String nextSessionPlan;
 
+    // AI саммари
+    @Column(columnDefinition = "TEXT")
+    private String aiSummary;
+
+    private OffsetDateTime aiSummaryGeneratedAt;
+
     // Финансы + флаги
     private BigDecimal price;
 

@@ -76,4 +76,12 @@ public class SessionController {
             @AuthenticationPrincipal PractitionerDetails user) {
         return ResponseEntity.ok(sessionService.getSessionSummary(id, user.getId()));
     }
+
+    @PostMapping("/{id}/summary/generate")
+    public ResponseEntity<Void> triggerSessionSummary(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal PractitionerDetails user) {
+        sessionService.triggerSessionSummaryGeneration(id, user.getId());
+        return ResponseEntity.accepted().build();
+    }
 }

@@ -1,5 +1,6 @@
 package com.vogulev.regreso.service.impl;
 
+import com.vogulev.regreso.ai.AiSummaryService;
 import com.vogulev.regreso.dto.request.ClientRequest;
 import com.vogulev.regreso.dto.response.ClientListItemResponse;
 import com.vogulev.regreso.dto.response.ClientResponse;
@@ -35,6 +36,7 @@ public class ClientServiceImpl implements ClientService {
     private final PractitionerRepository practitionerRepository;
     private final ClientMapper clientMapper;
     private final SessionMapper sessionMapper;
+    private final AiSummaryService aiSummaryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -123,6 +125,11 @@ public class ClientServiceImpl implements ClientService {
         return sessionRepository.findByClientIdOrderByScheduledAtDesc(clientId).stream()
                 .map(sessionMapper::toListItemResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void triggerClientSummaryGeneration(UUID clientId, UUID practitionerId) {
+        aiSummaryService.triggerClientSummary(clientId, practitionerId);
     }
 
     private Client findClientOrThrow(UUID id, UUID practitionerId) {

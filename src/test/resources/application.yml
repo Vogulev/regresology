@@ -32,3 +32,9 @@ storage:
     access-key: minioadmin
     secret-key: minioadmin
     bucket: regreso
+
+ai:
+  provider: stub
+  summary:
+    min-prompt-length: 100
+    regenerate-cooldown-minutes: 60

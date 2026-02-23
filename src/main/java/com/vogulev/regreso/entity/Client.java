@@ -59,6 +59,12 @@ public class Client {
     @Builder.Default
     private Boolean isArchived = false;
 
+    // AI саммари
+    @Column(columnDefinition = "TEXT")
+    private String aiOverallSummary;
+
+    private OffsetDateTime aiOverallSummaryGeneratedAt;
+
     @Builder.Default
     private OffsetDateTime createdAt = OffsetDateTime.now();
 

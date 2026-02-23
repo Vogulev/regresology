@@ -23,4 +23,6 @@ public interface ClientService {
     void updateProgress(UUID id, String overallProgress, UUID practitionerId);
 
     List<SessionListItemResponse> getClientSessions(UUID clientId, UUID practitionerId);
+
+    void triggerClientSummaryGeneration(UUID clientId, UUID practitionerId);
 }
