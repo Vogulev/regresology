@@ -9,7 +9,7 @@
         <relativePath/>
     </parent>
     <groupId>com.vogulev</groupId>
-    <artifactId>regreso</artifactId>
+    <artifactId>regreso-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>regreso</name>
     <description>CRM для регрессологов</description>

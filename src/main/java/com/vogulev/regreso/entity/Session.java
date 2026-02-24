@@ -100,9 +100,11 @@ public class Session {
     @Builder.Default
     private Boolean isPaid = false;
 
+    @Column(name = "reminder_24h_sent")
     @Builder.Default
     private Boolean reminder24hSent = false;
 
+    @Column(name = "reminder_1h_sent")
     @Builder.Default
     private Boolean reminder1hSent = false;
 
