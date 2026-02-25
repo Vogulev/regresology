@@ -16,4 +16,6 @@ public interface MaterialService {
     MaterialResponse updateMaterial(UUID id, MaterialRequest request, UUID practitionerId);
 
     void archiveMaterial(UUID id, UUID practitionerId);
+
+    void unarchiveMaterial(UUID id, UUID practitionerId);
 }

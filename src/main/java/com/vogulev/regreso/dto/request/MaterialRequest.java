@@ -11,6 +11,7 @@ public class MaterialRequest {
     @Size(max = 255)
     private String title;
 
+    @Size(max = 1024)
     private String description;
 
     @NotBlank

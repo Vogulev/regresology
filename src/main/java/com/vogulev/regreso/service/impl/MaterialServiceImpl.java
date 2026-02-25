@@ -72,6 +72,12 @@ public class MaterialServiceImpl implements MaterialService {
         material.setIsArchived(true);
     }
 
+    @Override
+    public void unarchiveMaterial(UUID id, UUID practitionerId) {
+        PractitionerMaterial material = findOrThrow(id, practitionerId);
+        material.setIsArchived(false);
+    }
+
     private PractitionerMaterial findOrThrow(UUID id, UUID practitionerId) {
         return materialRepository.findByIdAndPractitionerId(id, practitionerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Материал не найден"));

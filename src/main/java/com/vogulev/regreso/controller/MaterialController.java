@@ -52,4 +52,12 @@ public class MaterialController {
         materialService.archiveMaterial(id, user.getId());
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/{id}/unarchive")
+    public ResponseEntity<Void> unarchiveMaterial(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal PractitionerDetails user) {
+        materialService.unarchiveMaterial(id, user.getId());
+        return ResponseEntity.ok().build();
+    }
 }
