@@ -44,6 +44,9 @@ public class Practitioner {
     @Builder.Default
     private Integer inactiveClientReminderDays = 0;
 
+    @Builder.Default
+    private Boolean sessionRemindersEnabled = false;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Plan plan = Plan.FREE;

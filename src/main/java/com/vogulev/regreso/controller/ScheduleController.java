@@ -8,6 +8,7 @@ import com.vogulev.regreso.security.PractitionerDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +28,7 @@ public class ScheduleController {
     private final SessionRepository sessionRepository;
 
     @GetMapping("/today")
+    @Transactional(readOnly = true)
     public ResponseEntity<ScheduleResponse> getToday(
             @AuthenticationPrincipal PractitionerDetails user) {
         ZoneId zone = resolveZone(user.getPractitioner().getTimezone());
@@ -36,6 +38,7 @@ public class ScheduleController {
     }
 
     @GetMapping("/week")
+    @Transactional(readOnly = true)
     public ResponseEntity<ScheduleResponse> getWeek(
             @AuthenticationPrincipal PractitionerDetails user) {
         ZoneId zone = resolveZone(user.getPractitioner().getTimezone());
