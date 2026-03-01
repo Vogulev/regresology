@@ -47,6 +47,9 @@ public class Practitioner {
     @Builder.Default
     private Boolean sessionRemindersEnabled = false;
 
+    @Column(length = 500)
+    private String photoUrl;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Plan plan = Plan.FREE;

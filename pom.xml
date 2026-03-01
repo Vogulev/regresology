@@ -19,6 +19,7 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <jjwt.version>0.12.5</jjwt.version>
         <testcontainers.version>1.19.7</testcontainers.version>
+        <minio.version>8.5.11</minio.version>
     </properties>
 
     <dependencies>
@@ -83,6 +84,13 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
             <version>6.9.7.1</version>
+        </dependency>
+
+        <!-- MinIO S3-совместимое хранилище -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>${minio.version}</version>
         </dependency>
 
         <!-- Утилиты -->

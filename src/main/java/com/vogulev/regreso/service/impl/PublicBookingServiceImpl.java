@@ -10,6 +10,7 @@ import com.vogulev.regreso.entity.Practitioner;
 import com.vogulev.regreso.entity.Session;
 import com.vogulev.regreso.exception.ResourceNotFoundException;
 import com.vogulev.regreso.repository.BookingSettingsRepository;
+import com.vogulev.regreso.repository.CertificateRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.SessionRepository;
 import com.vogulev.regreso.service.PublicBookingService;
@@ -35,6 +36,7 @@ public class PublicBookingServiceImpl implements PublicBookingService {
     private final BookingSettingsRepository bookingSettingsRepository;
     private final SessionRepository sessionRepository;
     private final ClientRepository clientRepository;
+    private final CertificateRepository certificateRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,11 +46,25 @@ public class PublicBookingServiceImpl implements PublicBookingService {
 
         List<BookingServiceItemDto> services = parseServices(settings.getServices());
 
+        List<CertificateResponse> certificates = certificateRepository
+                .findByPractitionerIdOrderByCreatedAtDesc(p.getId())
+                .stream()
+                .map(c -> CertificateResponse.builder()
+                        .id(c.getId())
+                        .name(c.getName())
+                        .fileUrl(c.getFileUrl())
+                        .originalFilename(c.getOriginalFilename())
+                        .createdAt(c.getCreatedAt())
+                        .build())
+                .toList();
+
         return PublicBookingPageResponse.builder()
                 .practitionerName(p.getFirstName() + (p.getLastName() != null ? " " + p.getLastName() : ""))
                 .practitionerBio(p.getBio())
+                .practitionerPhotoUrl(p.getPhotoUrl())
                 .welcomeMessage(settings.getWelcomeMessage())
                 .services(services)
+                .certificates(certificates)
                 .requireIntakeForm(Boolean.TRUE.equals(settings.getRequireIntakeForm()))
                 .build();
     }

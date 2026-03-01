@@ -21,11 +21,11 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000"   # S3 API (файлы)
+      - "9001:9001"   # Web-консоль MinIO
     volumes:
       - minio_data:/data
     healthcheck:
@@ -44,14 +44,19 @@ services:
       DB_NAME: regreso
       DB_USER: regreso
       DB_PASSWORD: secret
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: regreso
       JWT_SECRET: ${JWT_SECRET:-local-dev-secret-key-please-change-in-production}
       TELEGRAM_BOT_ENABLED: "false"
       AI_PROVIDER: ${AI_PROVIDER:-stub}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # --- Хранилище файлов ---
+      STORAGE_TYPE: minio
+      # Внутренний адрес для подключения бэкенда к MinIO (Docker-сеть)
+      MINIO_ENDPOINT: http://minio:9000
+      # Публичный адрес, который открывает браузер (меняй на домен в production)
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-regreso}
     depends_on:
       postgres:
         condition: service_healthy

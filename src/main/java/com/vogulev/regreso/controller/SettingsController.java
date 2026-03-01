@@ -4,6 +4,7 @@ import com.vogulev.regreso.dto.request.BookingSettingsRequest;
 import com.vogulev.regreso.dto.request.NotificationSettingsRequest;
 import com.vogulev.regreso.dto.request.ProfileSettingsRequest;
 import com.vogulev.regreso.dto.response.BookingSettingsResponse;
+import com.vogulev.regreso.dto.response.CertificateResponse;
 import com.vogulev.regreso.dto.response.NotificationSettingsResponse;
 import com.vogulev.regreso.dto.response.ProfileSettingsResponse;
 import com.vogulev.regreso.dto.response.TelegramLinkResponse;
@@ -11,9 +12,15 @@ import com.vogulev.regreso.security.PractitionerDetails;
 import com.vogulev.regreso.service.SettingsService;
 import com.vogulev.regreso.service.TelegramLinkService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -74,5 +81,34 @@ public class SettingsController {
             @AuthenticationPrincipal PractitionerDetails user,
             @RequestBody NotificationSettingsRequest request) {
         return ResponseEntity.ok(settingsService.updateNotificationSettings(user.getId(), request));
+    }
+
+    @PostMapping(value = "/profile/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProfileSettingsResponse> uploadPhoto(
+            @AuthenticationPrincipal PractitionerDetails user,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(settingsService.uploadPhoto(user.getId(), file));
+    }
+
+    @GetMapping("/certificates")
+    public ResponseEntity<List<CertificateResponse>> getCertificates(
+            @AuthenticationPrincipal PractitionerDetails user) {
+        return ResponseEntity.ok(settingsService.getCertificates(user.getId()));
+    }
+
+    @PostMapping(value = "/certificates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CertificateResponse> uploadCertificate(
+            @AuthenticationPrincipal PractitionerDetails user,
+            @RequestParam("name") String name,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(settingsService.uploadCertificate(user.getId(), name, file));
+    }
+
+    @DeleteMapping("/certificates/{id}")
+    public ResponseEntity<Void> deleteCertificate(
+            @AuthenticationPrincipal PractitionerDetails user,
+            @PathVariable UUID id) {
+        settingsService.deleteCertificate(user.getId(), id);
+        return ResponseEntity.noContent().build();
     }
 }

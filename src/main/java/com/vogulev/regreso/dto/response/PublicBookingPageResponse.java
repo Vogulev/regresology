@@ -14,7 +14,9 @@ import java.util.List;
 public class PublicBookingPageResponse {
     private String practitionerName;
     private String practitionerBio;
+    private String practitionerPhotoUrl;
     private String welcomeMessage;
     private List<BookingServiceItemDto> services;
+    private List<CertificateResponse> certificates;
     private boolean requireIntakeForm;
 }

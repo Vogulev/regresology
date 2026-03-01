@@ -30,9 +30,19 @@ telegram:
     username: ${TELEGRAM_BOT_USERNAME:RegresoBot}
     enabled: ${TELEGRAM_BOT_ENABLED:false}
 
+upload:
+  dir: ${UPLOAD_DIR:${user.home}/regreso-uploads}
+
 storage:
+  # "local" — хранение на диске (только для локальной разработки, не для production!)
+  # "minio" — S3-совместимое хранилище (production)
+  type: ${STORAGE_TYPE:local}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    # public-url — адрес MinIO, который видит браузер.
+    # В Docker отличается от endpoint (браузер не знает про hostname "minio").
+    # В production: https://cdn.yourdomain.com или https://s3.yourdomain.com
+    public-url: ${MINIO_PUBLIC_URL:${MINIO_ENDPOINT:http://localhost:9000}}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     bucket: ${MINIO_BUCKET:regreso}

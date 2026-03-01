@@ -7,18 +7,24 @@ import com.vogulev.regreso.dto.request.NotificationSettingsRequest;
 import com.vogulev.regreso.dto.request.ProfileSettingsRequest;
 import com.vogulev.regreso.dto.response.BookingServiceItemDto;
 import com.vogulev.regreso.dto.response.BookingSettingsResponse;
+import com.vogulev.regreso.dto.response.CertificateResponse;
 import com.vogulev.regreso.dto.response.NotificationSettingsResponse;
 import com.vogulev.regreso.dto.response.ProfileSettingsResponse;
 import com.vogulev.regreso.entity.BookingSettings;
+import com.vogulev.regreso.entity.Certificate;
 import com.vogulev.regreso.entity.Practitioner;
 import com.vogulev.regreso.exception.ResourceNotFoundException;
 import com.vogulev.regreso.repository.BookingSettingsRepository;
+import com.vogulev.regreso.repository.CertificateRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
+import com.vogulev.regreso.service.FileStorageService;
 import com.vogulev.regreso.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +38,8 @@ public class SettingsServiceImpl implements SettingsService {
 
     private final PractitionerRepository practitionerRepository;
     private final BookingSettingsRepository bookingSettingsRepository;
+    private final CertificateRepository certificateRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -114,6 +122,49 @@ public class SettingsServiceImpl implements SettingsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Практик не найден"));
     }
 
+    @Override
+    public ProfileSettingsResponse uploadPhoto(UUID practitionerId, MultipartFile file) throws IOException {
+        Practitioner p = findPractitioner(practitionerId);
+        String oldPhotoUrl = p.getPhotoUrl();
+        String newPhotoUrl = fileStorageService.store(file, "photos");
+        p.setPhotoUrl(newPhotoUrl);
+        practitionerRepository.save(p);
+        if (oldPhotoUrl != null) {
+            fileStorageService.delete(oldPhotoUrl);
+        }
+        return toProfileResponse(p);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CertificateResponse> getCertificates(UUID practitionerId) {
+        return certificateRepository.findByPractitionerIdOrderByCreatedAtDesc(practitionerId)
+                .stream()
+                .map(this::toCertificateResponse)
+                .toList();
+    }
+
+    @Override
+    public CertificateResponse uploadCertificate(UUID practitionerId, String name, MultipartFile file) throws IOException {
+        Practitioner practitioner = findPractitioner(practitionerId);
+        String fileUrl = fileStorageService.store(file, "certificates");
+        Certificate cert = Certificate.builder()
+                .practitioner(practitioner)
+                .name(name)
+                .fileUrl(fileUrl)
+                .originalFilename(file.getOriginalFilename())
+                .build();
+        return toCertificateResponse(certificateRepository.save(cert));
+    }
+
+    @Override
+    public void deleteCertificate(UUID practitionerId, UUID certificateId) {
+        Certificate cert = certificateRepository.findByIdAndPractitionerId(certificateId, practitionerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Сертификат не найден"));
+        certificateRepository.delete(cert);
+        fileStorageService.delete(cert.getFileUrl());
+    }
+
     private ProfileSettingsResponse toProfileResponse(Practitioner p) {
         return ProfileSettingsResponse.builder()
                 .id(p.getId())
@@ -122,12 +173,23 @@ public class SettingsServiceImpl implements SettingsService {
                 .lastName(p.getLastName())
                 .phone(p.getPhone())
                 .bio(p.getBio())
+                .photoUrl(p.getPhotoUrl())
                 .timezone(p.getTimezone())
                 .defaultSessionDurationMin(p.getDefaultSessionDurationMin())
                 .telegramChatId(p.getTelegramChatId())
                 .telegramConnected(p.getTelegramChatId() != null)
                 .plan(p.getPlan() != null ? p.getPlan().name() : "FREE")
                 .planExpiresAt(p.getPlanExpiresAt())
+                .build();
+    }
+
+    private CertificateResponse toCertificateResponse(Certificate c) {
+        return CertificateResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .fileUrl(c.getFileUrl())
+                .originalFilename(c.getOriginalFilename())
+                .createdAt(c.getCreatedAt())
                 .build();
     }
 

@@ -20,6 +20,7 @@ public class ProfileSettingsResponse {
     private String bio;
     private String timezone;
     private Integer defaultSessionDurationMin;
+    private String photoUrl;
     private Long telegramChatId;
     private boolean telegramConnected;
     private String plan;
