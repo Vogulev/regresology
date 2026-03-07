@@ -47,6 +47,16 @@ public class ScheduleController {
         return ResponseEntity.ok(buildResponse(user.getId(), from, to));
     }
 
+    @GetMapping("/month")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ScheduleResponse> getMonth(
+            @AuthenticationPrincipal PractitionerDetails user) {
+        ZoneId zone = resolveZone(user.getPractitioner().getTimezone());
+        OffsetDateTime from = LocalDate.now(zone).atStartOfDay(zone).toOffsetDateTime();
+        OffsetDateTime to = from.plusDays(30).minusNanos(1);
+        return ResponseEntity.ok(buildResponse(user.getId(), from, to));
+    }
+
     // ── private helpers ───────────────────────────────────────────────────────
 
     private ScheduleResponse buildResponse(UUID practitionerId,
