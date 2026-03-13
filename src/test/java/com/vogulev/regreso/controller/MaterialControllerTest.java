@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
 import com.vogulev.regreso.dto.request.MaterialRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.MaterialRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,11 +26,13 @@ class MaterialControllerTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
     @Autowired MaterialRepository materialRepository;
+    @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
 
     @BeforeEach
     void cleanUp() {
         materialRepository.deleteAll();
+        clientRepository.deleteAll();
         practitionerRepository.deleteAll();
     }
 

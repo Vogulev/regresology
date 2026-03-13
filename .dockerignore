@@ -2,6 +2,3 @@
 regresology/.idea
 target
 *.md
-# maven.config ссылается на локальный абсолютный путь — в Docker не нужен,
-# Maven без него использует настройки по умолчанию (Maven Central)
-.mvn/maven.config

@@ -21,6 +21,6 @@ jobs:
           cache: maven
 
       - name: Run tests
-        run: ./mvnw verify -Dai.provider=stub
+        run: mvn verify -Dai.provider=stub
         env:
           TELEGRAM_BOT_ENABLED: false

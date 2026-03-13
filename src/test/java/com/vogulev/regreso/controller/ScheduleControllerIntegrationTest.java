@@ -18,7 +18,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
@@ -155,8 +157,8 @@ class ScheduleControllerIntegrationTest extends BaseIntegrationTest {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
 
-            String s1 = createSession(token, clientId, OffsetDateTime.now(ZoneOffset.UTC).withHour(9));
-            String s2 = createSession(token, clientId, OffsetDateTime.now(ZoneOffset.UTC).withHour(14));
+            String s1 = createSession(token, clientId, todayAtPractitionerHour(9));
+            String s2 = createSession(token, clientId, todayAtPractitionerHour(14));
             completeSession(token, s1);
 
             mockMvc.perform(get("/api/schedule/today")
@@ -386,5 +388,13 @@ class ScheduleControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/sessions/{id}/cancel", sessionId)
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
+    }
+
+    private OffsetDateTime todayAtPractitionerHour(int hour) {
+        ZoneId practitionerZone = ZoneId.of("Europe/Moscow");
+        return LocalDate.now(practitionerZone)
+                .atTime(hour, 0)
+                .atZone(practitionerZone)
+                .toOffsetDateTime();
     }
 }
