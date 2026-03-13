@@ -6,7 +6,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -q
 
-# Копируем исходники (maven.config исключён через .dockerignore — там плохой абс. путь)
+# Копируем исходники
 COPY src ./src
 RUN mvn package -DskipTests -q
 
