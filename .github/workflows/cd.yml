@@ -79,7 +79,8 @@ jobs:
             
             # Обновляем координаты образа в .env
             IMAGE_SHA="sha-$(echo '${{ github.sha }}' | cut -c1-7)"
-            sed -i "s|^GITHUB_REPOSITORY=.*|GITHUB_REPOSITORY=${{ github.repository }}|" .env
+            IMAGE_REPOSITORY="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+            sed -i "s|^GITHUB_REPOSITORY=.*|GITHUB_REPOSITORY=${IMAGE_REPOSITORY}|" .env
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_SHA}/" .env
             
             # Логинимся в GHCR с PAT для pull на удалённом сервере
@@ -92,4 +93,4 @@ jobs:
             # Чистим старые образы
             docker image prune -f
             
-            echo "Deployed ${{ github.repository }}:$IMAGE_SHA successfully"
+            echo "Deployed ${IMAGE_REPOSITORY}:${IMAGE_SHA} successfully"
