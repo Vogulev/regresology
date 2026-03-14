@@ -81,8 +81,8 @@ jobs:
             IMAGE_SHA="sha-$(echo '${{ github.sha }}' | cut -c1-7)"
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_SHA}/" .env
             
-            # Логинимся в GHCR
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Логинимся в GHCR с PAT для pull на удалённом сервере
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             
             # Пуллим новый образ и перезапускаем backend
             docker-compose -f docker-compose.prod.yml pull backend
