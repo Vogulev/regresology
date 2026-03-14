@@ -88,6 +88,7 @@ jobs:
             
             # Пуллим новый образ и перезапускаем backend
             docker-compose -f docker-compose.prod.yml pull backend
+            docker-compose -f docker-compose.prod.yml rm -sf backend || true
             docker-compose -f docker-compose.prod.yml up -d --no-deps backend
             
             # Чистим старые образы
