@@ -74,6 +74,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT || 22 }}
           script: |
+            set -e
             cd /opt/regreso
             
             # Обновляем IMAGE_TAG в .env
@@ -84,8 +85,8 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Пуллим новый образ и перезапускаем backend
-            docker compose -f docker-compose.prod.yml pull backend
-            docker compose -f docker-compose.prod.yml up -d --no-deps backend
+            docker-compose -f docker-compose.prod.yml pull backend
+            docker-compose -f docker-compose.prod.yml up -d --no-deps backend
             
             # Чистим старые образы
             docker image prune -f
