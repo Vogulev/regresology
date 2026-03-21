@@ -5,6 +5,7 @@ import com.vogulev.regreso.dto.response.AvailableSlotsResponse;
 import com.vogulev.regreso.dto.response.PublicBookingConfirmation;
 import com.vogulev.regreso.dto.response.PublicBookingPageResponse;
 import com.vogulev.regreso.service.PublicBookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class PublicBookingController {
     @PostMapping("/{slug}")
     public ResponseEntity<PublicBookingConfirmation> createBooking(
             @PathVariable String slug,
-            @RequestBody PublicBookingRequest request) {
+            @Valid @RequestBody PublicBookingRequest request) {
         return ResponseEntity.ok(publicBookingService.createBooking(slug, request));
     }
 }

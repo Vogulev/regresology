@@ -121,6 +121,7 @@ public class PublicBookingServiceImpl implements PublicBookingService {
     public PublicBookingConfirmation createBooking(String slug, PublicBookingRequest request) {
         BookingSettings settings = findSettings(slug);
         Practitioner practitioner = settings.getPractitioner();
+        String normalizedTelegram = normalizeTelegramUsername(request.getTelegramUsername());
 
         // Find or create client by phone
         Client client = clientRepository
@@ -130,9 +131,14 @@ public class PublicBookingServiceImpl implements PublicBookingService {
                         .firstName(request.getFirstName())
                         .lastName(request.getLastName())
                         .phone(request.getPhone())
-                        .email(request.getEmail())
+                        .telegramUsername(normalizedTelegram)
                         .initialRequest(request.getClientRequest())
                         .build()));
+
+        if (client.getTelegramUsername() == null && normalizedTelegram != null) {
+            client.setTelegramUsername(normalizedTelegram);
+            clientRepository.save(client);
+        }
 
         OffsetDateTime scheduledAt = OffsetDateTime.parse(request.getSelectedSlot(),
                 DateTimeFormatter.ISO_OFFSET_DATE_TIME);
@@ -200,5 +206,12 @@ public class PublicBookingServiceImpl implements PublicBookingService {
             }
         }
         return false;
+    }
+
+    private String normalizeTelegramUsername(String telegramUsername) {
+        if (telegramUsername == null) return null;
+        String normalized = telegramUsername.trim();
+        if (normalized.isBlank()) return null;
+        return normalized.startsWith("@") ? normalized : "@" + normalized;
     }
 }
