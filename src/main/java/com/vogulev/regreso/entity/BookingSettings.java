@@ -51,6 +51,14 @@ public class BookingSettings {
     @Column(columnDefinition = "TEXT")
     private String welcomeMessage;
 
+    @Builder.Default
+    @Column(length = 20)
+    private String availabilityMode = "DEFAULT";
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private String weeklyAvailability;
+
     @UpdateTimestamp
     private OffsetDateTime updatedAt;
 }

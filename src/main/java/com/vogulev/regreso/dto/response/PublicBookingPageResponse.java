@@ -19,4 +19,5 @@ public class PublicBookingPageResponse {
     private List<BookingServiceItemDto> services;
     private List<CertificateResponse> certificates;
     private boolean requireIntakeForm;
+    private Integer advanceDays;
 }

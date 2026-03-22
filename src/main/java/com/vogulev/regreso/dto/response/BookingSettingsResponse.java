@@ -22,4 +22,6 @@ public class BookingSettingsResponse {
     private boolean requireIntakeForm;
     private List<BookingServiceItemDto> services;
     private String welcomeMessage;
+    private BookingAvailabilityMode availabilityMode;
+    private List<BookingDayAvailabilityDto> weeklyAvailability;
 }

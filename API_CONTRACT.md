@@ -534,7 +534,9 @@ public record BookingSettingsRequest(
     Integer advanceDays,
     boolean requireIntakeForm,
     List<BookingServiceItem> services,
-    String welcomeMessage
+    String welcomeMessage,
+    BookingAvailabilityMode availabilityMode,
+    List<BookingDayAvailability> weeklyAvailability
 ) {}
 
 public record BookingSettingsResponse(
@@ -546,13 +548,31 @@ public record BookingSettingsResponse(
     Integer advanceDays,
     boolean requireIntakeForm,
     List<BookingServiceItem> services,
-    String welcomeMessage
+    String welcomeMessage,
+    BookingAvailabilityMode availabilityMode,
+    List<BookingDayAvailability> weeklyAvailability
 ) {}
 
 public record BookingServiceItem(
     @NotBlank String name,
     BigDecimal price,
     Integer durationMin
+) {}
+
+public enum BookingAvailabilityMode { DEFAULT, CUSTOM }
+
+public record BookingDayAvailability(
+    int dayOfWeek,
+    boolean isWorkingDay,
+    String startTime,
+    String endTime,
+    Integer slotIntervalMin,
+    List<BookingBreakItem> breaks
+) {}
+
+public record BookingBreakItem(
+    String startTime,
+    String endTime
 ) {}
 
 // Telegram — GET /api/settings/telegram/link
@@ -574,7 +594,8 @@ public record PublicBookingPageResponse(
     String practitionerBio,
     String welcomeMessage,
     List<BookingServiceItem> services,
-    boolean requireIntakeForm
+    boolean requireIntakeForm,
+    Integer advanceDays
 ) {}
 
 // GET /api/public/booking/{slug}/slots?date=2025-03-01

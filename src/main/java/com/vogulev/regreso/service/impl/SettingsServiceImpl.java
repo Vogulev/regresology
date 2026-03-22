@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vogulev.regreso.dto.request.BookingSettingsRequest;
 import com.vogulev.regreso.dto.request.NotificationSettingsRequest;
 import com.vogulev.regreso.dto.request.ProfileSettingsRequest;
+import com.vogulev.regreso.dto.response.BookingAvailabilityMode;
+import com.vogulev.regreso.dto.response.BookingDayAvailabilityDto;
 import com.vogulev.regreso.dto.response.BookingServiceItemDto;
 import com.vogulev.regreso.dto.response.BookingSettingsResponse;
 import com.vogulev.regreso.dto.response.CertificateResponse;
@@ -70,6 +72,8 @@ public class SettingsServiceImpl implements SettingsService {
                 .orElseGet(() -> BookingSettingsResponse.builder()
                         .isEnabled(false)
                         .services(Collections.emptyList())
+                        .availabilityMode(BookingAvailabilityMode.DEFAULT)
+                        .weeklyAvailability(Collections.emptyList())
                         .build());
     }
 
@@ -91,6 +95,16 @@ public class SettingsServiceImpl implements SettingsService {
                 settings.setServices(MAPPER.writeValueAsString(request.getServices()));
             } catch (Exception e) {
                 settings.setServices(null);
+            }
+        }
+        if (request.getAvailabilityMode() != null) {
+            settings.setAvailabilityMode(request.getAvailabilityMode().name());
+        }
+        if (request.getWeeklyAvailability() != null) {
+            try {
+                settings.setWeeklyAvailability(MAPPER.writeValueAsString(request.getWeeklyAvailability()));
+            } catch (Exception e) {
+                settings.setWeeklyAvailability(null);
             }
         }
 
@@ -194,13 +208,17 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     private BookingSettingsResponse toBookingResponse(BookingSettings s) {
-        List<BookingServiceItemDto> services = Collections.emptyList();
-        if (s.getServices() != null && !s.getServices().isBlank()) {
-            try {
-                services = MAPPER.readValue(s.getServices(), new TypeReference<>() {});
-            } catch (Exception ignored) {}
-        }
+        List<BookingServiceItemDto> services = readJsonList(s.getServices(), new TypeReference<>() {});
+        List<BookingDayAvailabilityDto> weeklyAvailability = readJsonList(s.getWeeklyAvailability(), new TypeReference<>() {});
         String bookingUrl = s.getSlug() != null ? "https://regreso.app/book/" + s.getSlug() : null;
+        BookingAvailabilityMode availabilityMode = BookingAvailabilityMode.DEFAULT;
+        if (s.getAvailabilityMode() != null && !s.getAvailabilityMode().isBlank()) {
+            try {
+                availabilityMode = BookingAvailabilityMode.valueOf(s.getAvailabilityMode());
+            } catch (IllegalArgumentException ignored) {
+                availabilityMode = BookingAvailabilityMode.DEFAULT;
+            }
+        }
         return BookingSettingsResponse.builder()
                 .isEnabled(Boolean.TRUE.equals(s.getIsEnabled()))
                 .slug(s.getSlug())
@@ -211,6 +229,19 @@ public class SettingsServiceImpl implements SettingsService {
                 .requireIntakeForm(Boolean.TRUE.equals(s.getRequireIntakeForm()))
                 .services(services)
                 .welcomeMessage(s.getWelcomeMessage())
+                .availabilityMode(availabilityMode)
+                .weeklyAvailability(weeklyAvailability)
                 .build();
+    }
+
+    private <T> List<T> readJsonList(String json, TypeReference<List<T>> typeReference) {
+        if (json == null || json.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            return MAPPER.readValue(json, typeReference);
+        } catch (Exception ignored) {
+            return Collections.emptyList();
+        }
     }
 }
