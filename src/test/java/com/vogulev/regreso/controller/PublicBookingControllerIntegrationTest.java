@@ -9,6 +9,7 @@ import com.vogulev.regreso.entity.Session;
 import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
+import com.vogulev.regreso.repository.ReminderRepository;
 import com.vogulev.regreso.repository.SessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -35,10 +35,12 @@ class PublicBookingControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired ClientRepository clientRepository;
     @Autowired SessionRepository sessionRepository;
+    @Autowired ReminderRepository reminderRepository;
 
     @BeforeEach
     void cleanUp() {
         bookingSettingsRepository.deleteAll();
+        reminderRepository.deleteAll();
         sessionRepository.deleteAll();
         clientRepository.deleteAll();
         practitionerRepository.deleteAll();
