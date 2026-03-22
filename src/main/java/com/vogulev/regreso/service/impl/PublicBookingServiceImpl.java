@@ -32,6 +32,7 @@ public class PublicBookingServiceImpl implements PublicBookingService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int DAY_START_HOUR = 9;
     private static final int DAY_END_HOUR = 20;
+    private static final BookingAvailabilityMode DEFAULT_AVAILABILITY_MODE = BookingAvailabilityMode.DEFAULT;
 
     private final BookingSettingsRepository bookingSettingsRepository;
     private final SessionRepository sessionRepository;
@@ -66,6 +67,7 @@ public class PublicBookingServiceImpl implements PublicBookingService {
                 .services(services)
                 .certificates(certificates)
                 .requireIntakeForm(Boolean.TRUE.equals(settings.getRequireIntakeForm()))
+                .advanceDays(settings.getAdvanceDays())
                 .build();
     }
 
@@ -73,12 +75,11 @@ public class PublicBookingServiceImpl implements PublicBookingService {
     @Transactional(readOnly = true)
     public AvailableSlotsResponse getAvailableSlots(String slug, String date) {
         BookingSettings settings = findSettings(slug);
-        Practitioner p = settings.getPractitioner();
+        Practitioner practitioner = settings.getPractitioner();
 
-        ZoneId zone = resolveZone(p.getTimezone());
+        ZoneId zone = resolveZone(practitioner.getTimezone());
         LocalDate localDate = LocalDate.parse(date);
 
-        // Only allow dates within advanceDays from today
         LocalDate today = LocalDate.now(zone);
         int advanceDays = settings.getAdvanceDays() != null ? settings.getAdvanceDays() : 30;
         if (localDate.isBefore(today) || localDate.isAfter(today.plusDays(advanceDays))) {
@@ -87,34 +88,24 @@ public class PublicBookingServiceImpl implements PublicBookingService {
 
         int durationMin = settings.getDefaultDurationMin() != null ? settings.getDefaultDurationMin() : 120;
         int bufferMin = settings.getBufferMin() != null ? settings.getBufferMin() : 0;
-        int slotInterval = durationMin + bufferMin;
 
-        // Load existing sessions for this day
         OffsetDateTime dayStart = localDate.atStartOfDay(zone).toOffsetDateTime();
         OffsetDateTime dayEnd = dayStart.plusDays(1).minusNanos(1);
         List<Session> existing = sessionRepository
                 .findByPractitionerIdAndScheduledAtBetweenOrderByScheduledAt(
-                        p.getId(), dayStart, dayEnd);
+                        practitioner.getId(), dayStart, dayEnd);
 
         OffsetDateTime now = OffsetDateTime.now(zone);
-        List<AvailableSlotDto> slots = new ArrayList<>();
+        BookingAvailabilityMode availabilityMode = resolveAvailabilityMode(settings.getAvailabilityMode());
+        if (availabilityMode == BookingAvailabilityMode.CUSTOM) {
+            return buildCustomSlots(settings, localDate, zone, now, existing, durationMin, bufferMin);
+        }
 
-        // Generate candidate slots from DAY_START_HOUR to DAY_END_HOUR
+        int slotInterval = durationMin + bufferMin;
         OffsetDateTime cursor = localDate.atTime(DAY_START_HOUR, 0).atZone(zone).toOffsetDateTime();
         OffsetDateTime cutoff = localDate.atTime(DAY_END_HOUR, 0).atZone(zone).toOffsetDateTime();
 
-        while (!cursor.plusMinutes(durationMin).isAfter(cutoff)) {
-            OffsetDateTime slotEnd = cursor.plusMinutes(durationMin);
-
-            // Skip past slots
-            if (cursor.isAfter(now) && !overlapsExisting(cursor, slotEnd, existing, durationMin)) {
-                slots.add(new AvailableSlotDto(cursor, slotEnd));
-            }
-
-            cursor = cursor.plusMinutes(slotInterval);
-        }
-
-        return new AvailableSlotsResponse(slots);
+        return new AvailableSlotsResponse(generateSlots(cursor, cutoff, slotInterval, durationMin, bufferMin, now, existing, Collections.emptyList(), localDate, zone));
     }
 
     @Override
@@ -183,6 +174,121 @@ public class PublicBookingServiceImpl implements PublicBookingService {
         }
     }
 
+    private List<BookingDayAvailabilityDto> parseWeeklyAvailability(String json) {
+        if (json == null || json.isBlank()) return Collections.emptyList();
+        try {
+            return MAPPER.readValue(json, new TypeReference<>() {});
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private BookingAvailabilityMode resolveAvailabilityMode(String value) {
+        if (value == null || value.isBlank()) {
+            return DEFAULT_AVAILABILITY_MODE;
+        }
+        try {
+            return BookingAvailabilityMode.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return DEFAULT_AVAILABILITY_MODE;
+        }
+    }
+
+    private AvailableSlotsResponse buildCustomSlots(
+            BookingSettings settings,
+            LocalDate localDate,
+            ZoneId zone,
+            OffsetDateTime now,
+            List<Session> existing,
+            int durationMin,
+            int bufferMin
+    ) {
+        List<BookingDayAvailabilityDto> weeklyAvailability = parseWeeklyAvailability(settings.getWeeklyAvailability());
+        BookingDayAvailabilityDto dayAvailability = weeklyAvailability.stream()
+                .filter(item -> item.getDayOfWeek() != null && item.getDayOfWeek() == localDate.getDayOfWeek().getValue())
+                .findFirst()
+                .orElse(null);
+
+        if (dayAvailability == null || !Boolean.TRUE.equals(dayAvailability.getIsWorkingDay())) {
+            return new AvailableSlotsResponse(Collections.emptyList());
+        }
+        if (dayAvailability.getStartTime() == null || dayAvailability.getEndTime() == null) {
+            return new AvailableSlotsResponse(Collections.emptyList());
+        }
+
+        try {
+            LocalTime startTime = LocalTime.parse(dayAvailability.getStartTime());
+            LocalTime endTime = LocalTime.parse(dayAvailability.getEndTime());
+            if (!endTime.isAfter(startTime)) {
+                return new AvailableSlotsResponse(Collections.emptyList());
+            }
+
+            int slotInterval = dayAvailability.getSlotIntervalMin() != null
+                    ? dayAvailability.getSlotIntervalMin()
+                    : durationMin + bufferMin;
+            if (slotInterval <= 0) {
+                return new AvailableSlotsResponse(Collections.emptyList());
+            }
+
+            OffsetDateTime cursor = localDate.atTime(startTime).atZone(zone).toOffsetDateTime();
+            OffsetDateTime cutoff = localDate.atTime(endTime).atZone(zone).toOffsetDateTime();
+            List<BookingBreakItemDto> breaks = dayAvailability.getBreaks() != null ? dayAvailability.getBreaks() : Collections.emptyList();
+
+            return new AvailableSlotsResponse(generateSlots(cursor, cutoff, slotInterval, durationMin, bufferMin, now, existing, breaks, localDate, zone));
+        } catch (DateTimeException e) {
+            return new AvailableSlotsResponse(Collections.emptyList());
+        }
+    }
+
+    private List<AvailableSlotDto> generateSlots(
+            OffsetDateTime cursor,
+            OffsetDateTime cutoff,
+            int slotInterval,
+            int durationMin,
+            int bufferMin,
+            OffsetDateTime now,
+            List<Session> existing,
+            List<BookingBreakItemDto> breaks,
+            LocalDate localDate,
+            ZoneId zone
+    ) {
+        List<AvailableSlotDto> slots = new ArrayList<>();
+        while (!cursor.plusMinutes(durationMin).isAfter(cutoff)) {
+            OffsetDateTime slotEnd = cursor.plusMinutes(durationMin);
+            if (cursor.isAfter(now)
+                    && !overlapsExisting(cursor, slotEnd, existing, durationMin, bufferMin)
+                    && !overlapsBreaks(cursor, slotEnd, breaks, localDate, zone)) {
+                slots.add(new AvailableSlotDto(cursor, slotEnd));
+            }
+            cursor = cursor.plusMinutes(slotInterval);
+        }
+        return slots;
+    }
+
+    private boolean overlapsBreaks(
+            OffsetDateTime start,
+            OffsetDateTime end,
+            List<BookingBreakItemDto> breaks,
+            LocalDate localDate,
+            ZoneId zone
+    ) {
+        for (BookingBreakItemDto item : breaks) {
+            if (item.getStartTime() == null || item.getEndTime() == null) {
+                continue;
+            }
+            try {
+                OffsetDateTime breakStart = localDate.atTime(LocalTime.parse(item.getStartTime())).atZone(zone).toOffsetDateTime();
+                OffsetDateTime breakEnd = localDate.atTime(LocalTime.parse(item.getEndTime())).atZone(zone).toOffsetDateTime();
+                if (start.isBefore(breakEnd) && end.isAfter(breakStart)) {
+                    return true;
+                }
+            } catch (DateTimeException ignored) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private ZoneId resolveZone(String timezone) {
         if (timezone == null || timezone.isBlank()) return ZoneId.of("Europe/Moscow");
         try {
@@ -192,16 +298,22 @@ public class PublicBookingServiceImpl implements PublicBookingService {
         }
     }
 
-    private boolean overlapsExisting(OffsetDateTime start, OffsetDateTime end,
-                                     List<Session> sessions, int durationMin) {
+    private boolean overlapsExisting(
+            OffsetDateTime start,
+            OffsetDateTime end,
+            List<Session> sessions,
+            int durationMin,
+            int bufferMin
+    ) {
+        OffsetDateTime candidateBlockedUntil = end.plusMinutes(Math.max(bufferMin, 0));
         for (Session s : sessions) {
             if (s.getStatus() == Session.Status.CANCELLED || s.getStatus() == Session.Status.NO_SHOW) {
                 continue;
             }
             OffsetDateTime sStart = s.getScheduledAt();
-            OffsetDateTime sEnd = sStart.plusMinutes(
-                    s.getDurationMin() != null ? s.getDurationMin() : durationMin);
-            if (start.isBefore(sEnd) && end.isAfter(sStart)) {
+            OffsetDateTime sEnd = sStart.plusMinutes(s.getDurationMin() != null ? s.getDurationMin() : durationMin);
+            OffsetDateTime existingBlockedUntil = sEnd.plusMinutes(Math.max(bufferMin, 0));
+            if (start.isBefore(existingBlockedUntil) && candidateBlockedUntil.isAfter(sStart)) {
                 return true;
             }
         }

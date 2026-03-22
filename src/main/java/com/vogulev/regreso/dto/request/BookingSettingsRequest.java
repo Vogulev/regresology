@@ -1,6 +1,8 @@
 package com.vogulev.regreso.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vogulev.regreso.dto.response.BookingAvailabilityMode;
+import com.vogulev.regreso.dto.response.BookingDayAvailabilityDto;
 import com.vogulev.regreso.dto.response.BookingServiceItemDto;
 import lombok.Data;
 import java.util.List;
@@ -16,4 +18,6 @@ public class BookingSettingsRequest {
     private Boolean requireIntakeForm;
     private List<BookingServiceItemDto> services;
     private String welcomeMessage;
+    private BookingAvailabilityMode availabilityMode;
+    private List<BookingDayAvailabilityDto> weeklyAvailability;
 }
