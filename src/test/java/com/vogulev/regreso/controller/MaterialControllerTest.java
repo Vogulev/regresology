@@ -4,9 +4,12 @@ import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
 import com.vogulev.regreso.dto.request.MaterialRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.MaterialRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
+import com.vogulev.regreso.repository.ReminderRepository;
+import com.vogulev.regreso.repository.SessionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,12 +28,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MaterialControllerTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired MaterialRepository materialRepository;
+    @Autowired ReminderRepository reminderRepository;
+    @Autowired SessionRepository sessionRepository;
     @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
+        reminderRepository.deleteAll();
+        sessionRepository.deleteAll();
         materialRepository.deleteAll();
         clientRepository.deleteAll();
         practitionerRepository.deleteAll();

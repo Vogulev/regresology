@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
 import com.vogulev.regreso.dto.request.ClientRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import com.vogulev.regreso.repository.ReminderRepository;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ClientControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
     @Autowired SessionRepository sessionRepository;
@@ -34,6 +36,7 @@ class ClientControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
         reminderRepository.deleteAll();
         sessionRepository.deleteAll();
         clientRepository.deleteAll();

@@ -29,6 +29,7 @@ class ClientThemeControllerTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
     @Autowired ReminderRepository reminderRepository;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired ThemeSessionRepository themeSessionRepository;
     @Autowired ClientThemeRepository clientThemeRepository;
     @Autowired HomeworkRepository homeworkRepository;
@@ -38,6 +39,7 @@ class ClientThemeControllerTest extends BaseIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
         reminderRepository.deleteAll();
         themeSessionRepository.deleteAll();
         clientThemeRepository.deleteAll();

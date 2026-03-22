@@ -30,6 +30,7 @@ class HomeworkControllerTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
     @Autowired HomeworkRepository homeworkRepository;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired ReminderRepository reminderRepository;
     @Autowired SessionRepository sessionRepository;
     @Autowired ClientRepository clientRepository;
@@ -38,6 +39,7 @@ class HomeworkControllerTest extends BaseIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
         reminderRepository.deleteAll();
         homeworkRepository.deleteAll();
         sessionRepository.deleteAll();

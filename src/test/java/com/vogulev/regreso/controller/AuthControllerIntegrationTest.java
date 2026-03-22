@@ -4,6 +4,7 @@ import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
 import com.vogulev.regreso.dto.request.LoginRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,11 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
         clientRepository.deleteAll();
         practitionerRepository.deleteAll();
     }

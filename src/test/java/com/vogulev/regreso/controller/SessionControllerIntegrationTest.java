@@ -6,6 +6,7 @@ import com.vogulev.regreso.dto.request.CancelSessionRequest;
 import com.vogulev.regreso.dto.request.CreateSessionRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
 import com.vogulev.regreso.dto.request.UpdateSessionRequest;
+import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import com.vogulev.regreso.repository.ReminderRepository;
@@ -31,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SessionControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired JsonMapper objectMapper;
+    @Autowired BookingSettingsRepository bookingSettingsRepository;
     @Autowired SessionRepository sessionRepository;
     @Autowired ClientRepository clientRepository;
     @Autowired PractitionerRepository practitionerRepository;
@@ -38,6 +40,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void cleanUp() {
+        bookingSettingsRepository.deleteAll();
         reminderRepository.deleteAll();
         sessionRepository.deleteAll();
         clientRepository.deleteAll();
