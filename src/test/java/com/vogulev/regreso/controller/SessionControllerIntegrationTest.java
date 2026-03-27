@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -178,7 +180,9 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.id").value(sessionId))
                     .andExpect(jsonPath("$.status").value("SCHEDULED"))
                     .andExpect(jsonPath("$.clientId").value(clientId))
-                    .andExpect(jsonPath("$.clientFullName").isNotEmpty());
+                    .andExpect(jsonPath("$.clientFullName").isNotEmpty())
+                    .andExpect(jsonPath("$.media").isArray())
+                    .andExpect(jsonPath("$.media", hasSize(0)));
         }
 
         @Test
@@ -200,6 +204,149 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
             String sessionId = createSession(tokenA, clientId);
 
             mockMvc.perform(get("/api/sessions/{id}", sessionId)
+                            .header("Authorization", "Bearer " + tokenB))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    // ── POST /api/sessions/{id}/photos ────────────────────────────────────────
+
+    @Nested
+    @DisplayName("POST /api/sessions/{id}/photos")
+    class UploadSessionPhoto {
+
+        @Test
+        @DisplayName("загрузка фото протокола → 201 и фото видно в GET сессии")
+        void uploadPhoto_shouldReturn201() throws Exception {
+            String token = registerAndGetToken("user@test.com");
+            String clientId = createClient(token);
+            String sessionId = createSession(token, clientId);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "notes.jpg",
+                    MediaType.IMAGE_JPEG_VALUE,
+                    "fake-image-content".getBytes()
+            );
+
+            mockMvc.perform(multipart("/api/sessions/{id}/photos", sessionId)
+                            .file(file)
+                            .param("caption", "Разворот тетради")
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.mediaType").value("PHOTO"))
+                    .andExpect(jsonPath("$.fileName").value("notes.jpg"))
+                    .andExpect(jsonPath("$.mimeType").value(MediaType.IMAGE_JPEG_VALUE))
+                    .andExpect(jsonPath("$.caption").value("Разворот тетради"))
+                    .andExpect(jsonPath("$.fileUrl", startsWith("/api/files/session-photos/")));
+
+            mockMvc.perform(get("/api/sessions/{id}", sessionId)
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.media", hasSize(1)))
+                    .andExpect(jsonPath("$.media[0].mediaType").value("PHOTO"))
+                    .andExpect(jsonPath("$.media[0].caption").value("Разворот тетради"));
+        }
+
+        @Test
+        @DisplayName("неизображение → 400")
+        void nonImage_shouldReturn400() throws Exception {
+            String token = registerAndGetToken("user@test.com");
+            String clientId = createClient(token);
+            String sessionId = createSession(token, clientId);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "notes.pdf",
+                    MediaType.APPLICATION_PDF_VALUE,
+                    "fake-pdf-content".getBytes()
+            );
+
+            mockMvc.perform(multipart("/api/sessions/{id}/photos", sessionId)
+                            .file(file)
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("чужая сессия → 404")
+        void otherUsersSession_shouldReturn404() throws Exception {
+            String tokenA = registerAndGetToken("userA@test.com");
+            String tokenB = registerAndGetToken("userB@test.com");
+            String clientId = createClient(tokenA);
+            String sessionId = createSession(tokenA, clientId);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "notes.jpg",
+                    MediaType.IMAGE_JPEG_VALUE,
+                    "fake-image-content".getBytes()
+            );
+
+            mockMvc.perform(multipart("/api/sessions/{id}/photos", sessionId)
+                            .file(file)
+                            .header("Authorization", "Bearer " + tokenB))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("удаление фото протокола → 204 и фото исчезает из GET сессии")
+        void deletePhoto_shouldReturn204() throws Exception {
+            String token = registerAndGetToken("user@test.com");
+            String clientId = createClient(token);
+            String sessionId = createSession(token, clientId);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "notes.jpg",
+                    MediaType.IMAGE_JPEG_VALUE,
+                    "fake-image-content".getBytes()
+            );
+
+            MvcResult uploadResult = mockMvc.perform(multipart("/api/sessions/{id}/photos", sessionId)
+                            .file(file)
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String mediaId = objectMapper.readTree(uploadResult.getResponse().getContentAsString())
+                    .get("id").asText();
+
+            mockMvc.perform(delete("/api/sessions/{id}/photos/{mediaId}", sessionId, mediaId)
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isNoContent());
+
+            mockMvc.perform(get("/api/sessions/{id}", sessionId)
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.media", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("удаление чужого фото → 404")
+        void deleteOtherUsersPhoto_shouldReturn404() throws Exception {
+            String tokenA = registerAndGetToken("userA@test.com");
+            String tokenB = registerAndGetToken("userB@test.com");
+            String clientId = createClient(tokenA);
+            String sessionId = createSession(tokenA, clientId);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "notes.jpg",
+                    MediaType.IMAGE_JPEG_VALUE,
+                    "fake-image-content".getBytes()
+            );
+
+            MvcResult uploadResult = mockMvc.perform(multipart("/api/sessions/{id}/photos", sessionId)
+                            .file(file)
+                            .header("Authorization", "Bearer " + tokenA))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String mediaId = objectMapper.readTree(uploadResult.getResponse().getContentAsString())
+                    .get("id").asText();
+
+            mockMvc.perform(delete("/api/sessions/{id}/photos/{mediaId}", sessionId, mediaId)
                             .header("Authorization", "Bearer " + tokenB))
                     .andExpect(status().isNotFound());
         }

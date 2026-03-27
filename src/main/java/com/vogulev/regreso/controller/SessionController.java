@@ -3,6 +3,7 @@ package com.vogulev.regreso.controller;
 import com.vogulev.regreso.dto.request.CancelSessionRequest;
 import com.vogulev.regreso.dto.request.CreateSessionRequest;
 import com.vogulev.regreso.dto.request.UpdateSessionRequest;
+import com.vogulev.regreso.dto.response.SessionMediaResponse;
 import com.vogulev.regreso.dto.response.SessionPrepResponse;
 import com.vogulev.regreso.dto.response.SessionResponse;
 import com.vogulev.regreso.dto.response.SessionSummaryStatusResponse;
@@ -10,10 +11,14 @@ import com.vogulev.regreso.security.PractitionerDetails;
 import com.vogulev.regreso.service.SessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.UUID;
 
@@ -37,6 +42,25 @@ public class SessionController {
             @PathVariable UUID id,
             @AuthenticationPrincipal PractitionerDetails user) {
         return ResponseEntity.ok(sessionService.getSession(id, user.getId()));
+    }
+
+    @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SessionMediaResponse> uploadSessionPhoto(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "caption", required = false) String caption,
+            @AuthenticationPrincipal PractitionerDetails user) throws IOException {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(sessionService.uploadSessionPhoto(id, file, caption, user.getId()));
+    }
+
+    @DeleteMapping("/{id}/photos/{mediaId}")
+    public ResponseEntity<Void> deleteSessionPhoto(
+            @PathVariable UUID id,
+            @PathVariable UUID mediaId,
+            @AuthenticationPrincipal PractitionerDetails user) {
+        sessionService.deleteSessionPhoto(id, mediaId, user.getId());
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")

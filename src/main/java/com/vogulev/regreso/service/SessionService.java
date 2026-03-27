@@ -3,10 +3,13 @@ package com.vogulev.regreso.service;
 import com.vogulev.regreso.dto.request.CancelSessionRequest;
 import com.vogulev.regreso.dto.request.CreateSessionRequest;
 import com.vogulev.regreso.dto.request.UpdateSessionRequest;
+import com.vogulev.regreso.dto.response.SessionMediaResponse;
 import com.vogulev.regreso.dto.response.SessionPrepResponse;
 import com.vogulev.regreso.dto.response.SessionResponse;
 import com.vogulev.regreso.dto.response.SessionSummaryStatusResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -92,4 +95,26 @@ public interface SessionService {
      * @param practitionerId идентификатор практика
      */
     void triggerSessionSummaryGeneration(UUID sessionId, UUID practitionerId);
+
+    /**
+     * Загружает фото рукописного протокола или других материалов к сессии.
+     *
+     * @param sessionId      идентификатор сессии
+     * @param file           изображение
+     * @param caption        подпись к фото
+     * @param practitionerId идентификатор практика
+     * @return данные сохранённого медиафайла
+     * @throws IOException если файл не удалось сохранить
+     */
+    SessionMediaResponse uploadSessionPhoto(UUID sessionId, MultipartFile file, String caption, UUID practitionerId)
+            throws IOException;
+
+    /**
+     * Удаляет фото протокола из сессии.
+     *
+     * @param sessionId      идентификатор сессии
+     * @param mediaId        идентификатор фото
+     * @param practitionerId идентификатор практика
+     */
+    void deleteSessionPhoto(UUID sessionId, UUID mediaId, UUID practitionerId);
 }
