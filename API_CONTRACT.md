@@ -261,6 +261,31 @@ public record SessionResponse(
     OffsetDateTime updatedAt
 ) {}
 
+public record SessionMediaResponse(
+    UUID id,
+    String mediaType,   // PHOTO
+    String fileUrl,
+    String fileName,
+    String mimeType,
+    Integer fileSizeBytes,
+    Integer durationSec,
+    String caption,
+    OffsetDateTime createdAt
+) {}
+
+// POST /api/sessions/{id}/photos — загрузить фото рукописного протокола
+// multipart/form-data:
+// - file: image/*
+// - caption: optional
+// Использование:
+// - фото страниц тетради или журнала практика
+// - фото рукописных заметок, схем, символов, рисунков клиента
+// После загрузки файл сразу должен появляться в SessionResponse.media на экране сессии.
+// Фронтенд может вызывать endpoint последовательно для множественной загрузки нескольких файлов.
+//
+// DELETE /api/sessions/{id}/photos/{mediaId} — удалить фото протокола
+// Ответ: 204 No Content
+
 // GET /api/sessions/{id} — лёгкая версия для списков
 public record SessionListItemResponse(
     UUID id,

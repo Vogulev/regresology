@@ -67,6 +67,8 @@ public class SessionResponse {
     private BigDecimal price;
     private Boolean isPaid;
 
+    private List<SessionMediaResponse> media;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

@@ -11,15 +11,19 @@ import com.vogulev.regreso.exception.BusinessException;
 import com.vogulev.regreso.exception.ResourceNotFoundException;
 import com.vogulev.regreso.mapper.SessionMapper;
 import com.vogulev.regreso.repository.*;
+import com.vogulev.regreso.service.FileStorageService;
 import com.vogulev.regreso.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,9 +38,11 @@ public class SessionServiceImpl implements SessionService {
     private final ReminderRepository reminderRepository;
     private final ClientThemeRepository clientThemeRepository;
     private final HomeworkRepository homeworkRepository;
+    private final SessionMediaRepository sessionMediaRepository;
     private final SessionMapper sessionMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final AiSummaryService aiSummaryService;
+    private final FileStorageService fileStorageService;
 
     @Override
     public SessionResponse createSession(CreateSessionRequest request, UUID practitionerId) {
@@ -66,21 +72,21 @@ public class SessionServiceImpl implements SessionService {
         session = sessionRepository.save(session);
         createReminders(session);
 
-        return sessionMapper.toResponse(session);
+        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
     }
 
     @Override
     @Transactional(readOnly = true)
     public SessionResponse getSession(UUID sessionId, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
-        return sessionMapper.toResponse(session);
+        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
     }
 
     @Override
     public SessionResponse updateSession(UUID sessionId, UpdateSessionRequest request, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
         applyUpdate(session, request);
-        return sessionMapper.toResponse(session);
+        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
     }
 
     @Override
@@ -99,7 +105,7 @@ public class SessionServiceImpl implements SessionService {
         }
         session.setStatus(Session.Status.COMPLETED);
 
-        SessionResponse response = sessionMapper.toResponse(session);
+        SessionResponse response = enrichWithMedia(sessionMapper.toResponse(session), session.getId());
 
         // Публикуем событие для будущей AI-генерации саммари (асинхронно)
         eventPublisher.publishEvent(new SessionCompletedEvent(this, session.getId()));
@@ -123,7 +129,7 @@ public class SessionServiceImpl implements SessionService {
             session.setPractitionerNotes(request.getReason());
         }
 
-        return sessionMapper.toResponse(session);
+        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
     }
 
     @Override
@@ -213,11 +219,105 @@ public class SessionServiceImpl implements SessionService {
         aiSummaryService.triggerSessionSummary(sessionId, practitionerId);
     }
 
+    @Override
+    public SessionMediaResponse uploadSessionPhoto(UUID sessionId, MultipartFile file, String caption, UUID practitionerId)
+            throws IOException {
+        Session session = findSessionOrThrow(sessionId, practitionerId);
+        validateSessionPhoto(file);
+
+        String fileUrl = fileStorageService.store(file, "session-photos");
+        SessionMedia media = SessionMedia.builder()
+                .session(session)
+                .mediaType("PHOTO")
+                .fileKey(fileUrl)
+                .fileName(resolveFileName(file))
+                .mimeType(resolveMimeType(file))
+                .fileSizeBytes(Math.toIntExact(file.getSize()))
+                .caption(normalizeCaption(caption))
+                .build();
+
+        return toMediaResponse(sessionMediaRepository.save(media));
+    }
+
+    @Override
+    public void deleteSessionPhoto(UUID sessionId, UUID mediaId, UUID practitionerId) {
+        findSessionOrThrow(sessionId, practitionerId);
+
+        SessionMedia media = sessionMediaRepository.findByIdAndSessionId(mediaId, sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Фото протокола не найдено"));
+
+        sessionMediaRepository.delete(media);
+        fileStorageService.delete(media.getFileKey());
+    }
+
     // ── private helpers ───────────────────────────────────────────────────────
 
     private Session findSessionOrThrow(UUID sessionId, UUID practitionerId) {
         return sessionRepository.findByIdAndPractitionerId(sessionId, practitionerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Сессия не найдена"));
+    }
+
+    private SessionResponse enrichWithMedia(SessionResponse response, UUID sessionId) {
+        response.setMedia(getMediaResponses(sessionId));
+        return response;
+    }
+
+    private List<SessionMediaResponse> getMediaResponses(UUID sessionId) {
+        return sessionMediaRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).stream()
+                .map(this::toMediaResponse)
+                .toList();
+    }
+
+    private SessionMediaResponse toMediaResponse(SessionMedia media) {
+        return SessionMediaResponse.builder()
+                .id(media.getId())
+                .mediaType(media.getMediaType())
+                .fileUrl(media.getFileKey())
+                .fileName(media.getFileName())
+                .mimeType(media.getMimeType())
+                .fileSizeBytes(media.getFileSizeBytes())
+                .durationSec(media.getDurationSec())
+                .caption(media.getCaption())
+                .createdAt(media.getCreatedAt())
+                .build();
+    }
+
+    private void validateSessionPhoto(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Файл изображения обязателен");
+        }
+
+        String mimeType = resolveMimeType(file);
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase(Locale.ROOT) : "";
+        boolean supportedByMime = mimeType.startsWith("image/");
+        boolean supportedByExtension = filename.endsWith(".jpg")
+                || filename.endsWith(".jpeg")
+                || filename.endsWith(".png")
+                || filename.endsWith(".webp")
+                || filename.endsWith(".heic")
+                || filename.endsWith(".heif");
+
+        if (!supportedByMime && !supportedByExtension) {
+            throw new BusinessException("Можно загружать только изображения протокола");
+        }
+    }
+
+    private String resolveMimeType(MultipartFile file) {
+        return file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+    }
+
+    private String resolveFileName(MultipartFile file) {
+        return file.getOriginalFilename() != null && !file.getOriginalFilename().isBlank()
+                ? file.getOriginalFilename()
+                : "session-photo";
+    }
+
+    private String normalizeCaption(String caption) {
+        if (caption == null) {
+            return null;
+        }
+        String trimmed = caption.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void applyUpdate(Session session, UpdateSessionRequest req) {
