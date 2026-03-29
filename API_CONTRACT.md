@@ -639,6 +639,21 @@ public record BookingServiceItem(
 
 public enum BookingAvailabilityMode { DEFAULT, CUSTOM }
 
+// GET /api/settings/notifications
+// PUT /api/settings/notifications
+public record NotificationSettingsRequest(
+    boolean sessionRemindersEnabled,             // напоминания клиентам
+    boolean practitionerSessionRemindersEnabled, // напоминания самому практику
+    Integer inactiveClientReminderDays
+) {}
+
+public record NotificationSettingsResponse(
+    boolean sessionRemindersEnabled,
+    boolean practitionerSessionRemindersEnabled,
+    Integer inactiveClientReminderDays,
+    boolean telegramConnected
+) {}
+
 public record BookingDayAvailability(
     int dayOfWeek,
     boolean isWorkingDay,

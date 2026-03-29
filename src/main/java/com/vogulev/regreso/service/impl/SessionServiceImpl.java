@@ -369,16 +369,23 @@ public class SessionServiceImpl implements SessionService {
     }
 
     private void createReminders(Session session) {
+        saveReminderPair(session, Reminder.RecipientType.CLIENT);
+        if (Boolean.TRUE.equals(session.getPractitioner().getPractitionerSessionRemindersEnabled())) {
+            saveReminderPair(session, Reminder.RecipientType.PRACTITIONER);
+        }
+    }
+
+    private void saveReminderPair(Session session, Reminder.RecipientType recipientType) {
         Reminder reminder24h = Reminder.builder()
                 .session(session)
-                .recipientType(Reminder.RecipientType.CLIENT)
+                .recipientType(recipientType)
                 .channel(Reminder.Channel.TELEGRAM)
                 .sendAt(session.getScheduledAt().minusHours(24))
                 .build();
 
         Reminder reminder1h = Reminder.builder()
                 .session(session)
-                .recipientType(Reminder.RecipientType.CLIENT)
+                .recipientType(recipientType)
                 .channel(Reminder.Channel.TELEGRAM)
                 .sendAt(session.getScheduledAt().minusHours(1))
                 .build();

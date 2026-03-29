@@ -47,6 +47,9 @@ public class Practitioner {
     @Builder.Default
     private Boolean sessionRemindersEnabled = false;
 
+    @Builder.Default
+    private Boolean practitionerSessionRemindersEnabled = false;
+
     @Column(length = 500)
     private String photoUrl;
 

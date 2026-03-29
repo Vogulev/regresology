@@ -89,11 +89,29 @@ public class TelegramNotificationServiceImpl implements TelegramNotificationServ
         var session = reminder.getSession();
         var practitioner = session.getPractitioner();
         var practitionerName = practitioner.getFirstName();
+        var clientName = session.getClient().getFirstName();
 
         ZoneId zone = resolveZone(practitioner.getTimezone());
         var scheduledLocal = session.getScheduledAt().atZoneSameInstant(zone);
         boolean is24h = reminder.getSendAt()
                 .isBefore(session.getScheduledAt().minusHours(2));
+
+        if (reminder.getRecipientType() == Reminder.RecipientType.PRACTITIONER) {
+            if (is24h) {
+                return String.format(
+                        "Напоминание: завтра у вас сессия с %s\n🗓 %s в %s\nПродолжительность: %d мин",
+                        clientName,
+                        scheduledLocal.format(DATE_FMT),
+                        scheduledLocal.format(TIME_FMT),
+                        session.getDurationMin() != null ? session.getDurationMin() : 120
+                );
+            }
+            return String.format(
+                    "Напоминание: через час у вас сессия с %s\n🕐 Начало в %s",
+                    clientName,
+                    scheduledLocal.format(TIME_FMT)
+            );
+        }
 
         if (is24h) {
             return String.format(

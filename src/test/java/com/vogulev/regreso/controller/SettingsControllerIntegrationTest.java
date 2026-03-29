@@ -119,6 +119,40 @@ class SettingsControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.weeklyAvailability[0].breaks[0].endTime").value("14:00"));
     }
 
+    @Test
+    @DisplayName("GET/PUT /api/settings/notifications сохраняет флаг напоминаний практику")
+    void notifications_shouldPersistPractitionerReminderFlag() throws Exception {
+        String token = registerAndGetToken("notifications@test.com");
+
+        mockMvc.perform(get("/api/settings/notifications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionRemindersEnabled").value(false))
+                .andExpect(jsonPath("$.practitionerSessionRemindersEnabled").value(false))
+                .andExpect(jsonPath("$.telegramConnected").value(false));
+
+        mockMvc.perform(put("/api/settings/notifications")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "sessionRemindersEnabled": true,
+                                  "practitionerSessionRemindersEnabled": true,
+                                  "inactiveClientReminderDays": 45
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionRemindersEnabled").value(true))
+                .andExpect(jsonPath("$.practitionerSessionRemindersEnabled").value(true))
+                .andExpect(jsonPath("$.inactiveClientReminderDays").value(45));
+
+        mockMvc.perform(get("/api/settings/notifications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.practitionerSessionRemindersEnabled").value(true))
+                .andExpect(jsonPath("$.inactiveClientReminderDays").value(45));
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private String registerAndGetToken(String email) throws Exception {

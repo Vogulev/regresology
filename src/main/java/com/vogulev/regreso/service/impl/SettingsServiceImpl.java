@@ -117,6 +117,7 @@ public class SettingsServiceImpl implements SettingsService {
         Practitioner p = findPractitioner(practitionerId);
         return NotificationSettingsResponse.builder()
                 .sessionRemindersEnabled(Boolean.TRUE.equals(p.getSessionRemindersEnabled()))
+                .practitionerSessionRemindersEnabled(Boolean.TRUE.equals(p.getPractitionerSessionRemindersEnabled()))
                 .inactiveClientReminderDays(p.getInactiveClientReminderDays())
                 .telegramConnected(p.getTelegramChatId() != null)
                 .build();
@@ -126,6 +127,9 @@ public class SettingsServiceImpl implements SettingsService {
     public NotificationSettingsResponse updateNotificationSettings(UUID practitionerId, NotificationSettingsRequest request) {
         Practitioner p = findPractitioner(practitionerId);
         if (request.getSessionRemindersEnabled() != null) p.setSessionRemindersEnabled(request.getSessionRemindersEnabled());
+        if (request.getPractitionerSessionRemindersEnabled() != null) {
+            p.setPractitionerSessionRemindersEnabled(request.getPractitionerSessionRemindersEnabled());
+        }
         if (request.getInactiveClientReminderDays() != null) p.setInactiveClientReminderDays(request.getInactiveClientReminderDays());
         practitionerRepository.save(p);
         return getNotificationSettings(practitionerId);

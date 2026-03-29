@@ -165,4 +165,18 @@ class ReminderSchedulerTest {
         verify(telegramNotificationService).sendSessionReminder(pendingReminder);
         assertThat(pendingReminder.getStatus()).isEqualTo(Reminder.Status.SENT);
     }
+
+    @Test
+    @DisplayName("напоминание практику не меняет client reminder flags у сессии")
+    void processReminders_practitionerReminder_doesNotChangeClientFlags() {
+        pendingReminder.setRecipientType(Reminder.RecipientType.PRACTITIONER);
+
+        when(reminderRepository.findByStatusAndSendAtBefore(eq(Reminder.Status.PENDING), any()))
+                .thenReturn(List.of(pendingReminder));
+
+        scheduler.processReminders();
+
+        assertThat(pendingReminder.getSession().getReminder24hSent()).isFalse();
+        assertThat(pendingReminder.getSession().getReminder1hSent()).isFalse();
+    }
 }

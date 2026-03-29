@@ -45,6 +45,9 @@ public class ReminderScheduler {
     }
 
     private void updateSessionReminderFlags(Reminder reminder) {
+        if (reminder.getRecipientType() != Reminder.RecipientType.CLIENT) {
+            return;
+        }
         Session session = reminder.getSession();
         boolean is24h = reminder.getSendAt()
                 .isBefore(session.getScheduledAt().minusHours(2));

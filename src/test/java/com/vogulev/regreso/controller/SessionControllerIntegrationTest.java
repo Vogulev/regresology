@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -110,6 +111,37 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
 
             long count = reminderRepository.count();
             org.assertj.core.api.Assertions.assertThat(count).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("включены напоминания практику → создаются ещё 2 reminder для PRACTITIONER")
+        void createSession_withPractitionerRemindersEnabled_createsPractitionerReminders() throws Exception {
+            String token = registerAndGetToken("practitioner-reminders@test.com");
+            String clientId = createClient(token);
+
+            mockMvc.perform(put("/api/settings/notifications")
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "practitionerSessionRemindersEnabled": true
+                                    }
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.practitionerSessionRemindersEnabled").value(true));
+
+            createSession(token, clientId);
+
+            List<com.vogulev.regreso.entity.Reminder> reminders = reminderRepository.findAll();
+            org.assertj.core.api.Assertions.assertThat(reminders).hasSize(4);
+            org.assertj.core.api.Assertions.assertThat(reminders)
+                    .extracting(com.vogulev.regreso.entity.Reminder::getRecipientType)
+                    .containsExactlyInAnyOrder(
+                            com.vogulev.regreso.entity.Reminder.RecipientType.CLIENT,
+                            com.vogulev.regreso.entity.Reminder.RecipientType.CLIENT,
+                            com.vogulev.regreso.entity.Reminder.RecipientType.PRACTITIONER,
+                            com.vogulev.regreso.entity.Reminder.RecipientType.PRACTITIONER
+                    );
         }
 
         @Test
