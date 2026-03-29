@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NotificationSettingsResponse {
     private boolean sessionRemindersEnabled;
+    private boolean practitionerSessionRemindersEnabled;
     private Integer inactiveClientReminderDays;
     private boolean telegramConnected;
 }

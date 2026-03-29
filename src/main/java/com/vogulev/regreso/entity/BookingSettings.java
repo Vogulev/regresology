@@ -3,6 +3,8 @@ package com.vogulev.regreso.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
@@ -24,6 +26,7 @@ public class BookingSettings {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "practitioner_id", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Practitioner practitioner;
 
     @Builder.Default

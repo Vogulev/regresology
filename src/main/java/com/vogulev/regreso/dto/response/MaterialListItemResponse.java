@@ -17,6 +17,10 @@ public class MaterialListItemResponse {
     private UUID id;
     private String title;
     private String materialType;
+    private String fileUrl;
+    private String fileName;
+    private String mimeType;
+    private Long fileSizeBytes;
     private Boolean isArchived;
     private OffsetDateTime createdAt;
 }

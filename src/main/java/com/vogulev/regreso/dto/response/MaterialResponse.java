@@ -19,6 +19,10 @@ public class MaterialResponse {
     private String description;
     private String materialType;
     private String content;
+    private String fileUrl;
+    private String fileName;
+    private String mimeType;
+    private Long fileSizeBytes;
     private Boolean isArchived;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
