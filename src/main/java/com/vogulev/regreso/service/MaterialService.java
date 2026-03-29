@@ -3,7 +3,9 @@ package com.vogulev.regreso.service;
 import com.vogulev.regreso.dto.request.MaterialRequest;
 import com.vogulev.regreso.dto.response.MaterialListItemResponse;
 import com.vogulev.regreso.dto.response.MaterialResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +32,7 @@ public interface MaterialService {
      * @param practitionerId идентификатор практика
      * @return созданный материал
      */
-    MaterialResponse createMaterial(MaterialRequest request, UUID practitionerId);
+    MaterialResponse createMaterial(MaterialRequest request, MultipartFile file, UUID practitionerId) throws IOException;
 
     /**
      * Обновляет существующий материал.
@@ -40,7 +42,7 @@ public interface MaterialService {
      * @param practitionerId идентификатор практика
      * @return обновлённый материал
      */
-    MaterialResponse updateMaterial(UUID id, MaterialRequest request, UUID practitionerId);
+    MaterialResponse updateMaterial(UUID id, MaterialRequest request, MultipartFile file, UUID practitionerId) throws IOException;
 
     /**
      * Переводит материал в архив.

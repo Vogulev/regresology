@@ -380,6 +380,59 @@ public record ScheduleSessionItem(
 
 
 // =============================================
+// MATERIALS — библиотека материалов практика
+// =============================================
+
+// GET /api/materials?includeArchived=false
+public record MaterialListItemResponse(
+    UUID id,
+    String title,
+    String materialType,
+    String fileUrl,
+    String fileName,
+    String mimeType,
+    Long fileSizeBytes,
+    boolean isArchived,
+    OffsetDateTime createdAt
+) {}
+
+// POST /api/materials
+// PUT /api/materials/{id}
+// Поддерживаются 2 формата:
+// 1) application/json
+public record MaterialRequest(
+    @NotBlank @Size(max = 255) String title,
+    @Size(max = 1024) String description,
+    @NotBlank @Size(max = 50) String materialType,
+    String content
+) {}
+
+// 2) multipart/form-data
+// - title: string (required)
+// - description: string (optional)
+// - materialType: string (required)
+// - content: string (optional)
+// - file: binary (optional)
+//
+// Если file передан, бэкенд сохраняет его и возвращает метаданные файла.
+
+public record MaterialResponse(
+    UUID id,
+    String title,
+    String description,
+    String materialType,
+    String content,
+    String fileUrl,
+    String fileName,
+    String mimeType,
+    Long fileSizeBytes,
+    boolean isArchived,
+    OffsetDateTime createdAt,
+    OffsetDateTime updatedAt
+) {}
+
+
+// =============================================
 // HOMEWORK — домашние задания
 // =============================================
 

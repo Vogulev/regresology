@@ -39,6 +39,15 @@ public class PractitionerMaterial {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(columnDefinition = "TEXT")
+    private String fileUrl;
+
+    private String fileName;
+
+    private String mimeType;
+
+    private Long fileSizeBytes;
+
     @Builder.Default
     private Boolean isArchived = false;
 

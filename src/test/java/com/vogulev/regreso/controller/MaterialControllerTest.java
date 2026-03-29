@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
@@ -136,6 +137,32 @@ class MaterialControllerTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("multipart с файлом → 201 и метаданные файла в ответе")
+        void multipartWithFile_returns201() throws Exception {
+            String token = registerAndGetToken("mat-file@test.com");
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "guide.pdf",
+                    "application/pdf",
+                    "pdf-content".getBytes()
+            );
+
+            mockMvc.perform(multipart("/api/materials")
+                            .file(file)
+                            .param("title", "Методичка")
+                            .param("description", "PDF-файл для клиента")
+                            .param("materialType", "guide")
+                            .param("content", "Краткое описание")
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.title").value("Методичка"))
+                    .andExpect(jsonPath("$.fileName").value("guide.pdf"))
+                    .andExpect(jsonPath("$.mimeType").value("application/pdf"))
+                    .andExpect(jsonPath("$.fileSizeBytes").value(11))
+                    .andExpect(jsonPath("$.fileUrl", startsWith("/api/files/materials/")));
+        }
+
+        @Test
         @DisplayName("без title → 400")
         void missingTitle_returns400() throws Exception {
             String token = registerAndGetToken("mat@test.com");
@@ -180,6 +207,36 @@ class MaterialControllerTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.title").value("Новое название"))
                     .andExpect(jsonPath("$.materialType").value("article"))
                     .andExpect(jsonPath("$.content").value("Обновлённый контент"));
+        }
+
+        @Test
+        @DisplayName("multipart обновление заменяет файл")
+        void updateMultipart_replacesFile() throws Exception {
+            String token = registerAndGetToken("mat-update-file@test.com");
+            String id = createMaterialAndGetId(token, "Старое название", "book");
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "new-guide.pdf",
+                    "application/pdf",
+                    "updated-content".getBytes()
+            );
+
+            mockMvc.perform(multipart("/api/materials/{id}", id)
+                            .file(file)
+                            .param("title", "Новое название")
+                            .param("description", "Новое описание")
+                            .param("materialType", "article")
+                            .param("content", "Обновлённый контент")
+                            .header("Authorization", "Bearer " + token)
+                            .with(request -> {
+                                request.setMethod("PUT");
+                                return request;
+                            }))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.title").value("Новое название"))
+                    .andExpect(jsonPath("$.fileName").value("new-guide.pdf"))
+                    .andExpect(jsonPath("$.mimeType").value("application/pdf"))
+                    .andExpect(jsonPath("$.fileUrl", startsWith("/api/files/materials/")));
         }
 
         @Test
