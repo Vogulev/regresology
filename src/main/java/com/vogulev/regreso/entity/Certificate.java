@@ -2,6 +2,8 @@ package com.vogulev.regreso.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -21,6 +23,7 @@ public class Certificate {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "practitioner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Practitioner practitioner;
 
     @Column(nullable = false)

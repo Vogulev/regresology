@@ -2,6 +2,8 @@ package com.vogulev.regreso.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -22,6 +24,7 @@ public class Subscription {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "practitioner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Practitioner practitioner;
 
     @Column(nullable = false, length = 20)
