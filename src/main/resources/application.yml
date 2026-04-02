@@ -4,6 +4,17 @@ cors:
 spring:
   application:
     name: regreso
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:regreso}
     username: ${DB_USER:regreso}
@@ -23,6 +34,11 @@ security:
     secret: ${JWT_SECRET:change-me-in-production-very-long-secret-key}
     expiration-ms: 86400000
     refresh-expiration-ms: 604800000
+
+app:
+  password-reset:
+    code-ttl-minutes: ${PASSWORD_RESET_CODE_TTL_MINUTES:15}
+    mail-from: ${PASSWORD_RESET_MAIL_FROM:${MAIL_USERNAME:no-reply@regreso.app}}
 
 telegram:
   bot:

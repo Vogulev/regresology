@@ -1,8 +1,11 @@
 package com.vogulev.regreso.service;
 
+import com.vogulev.regreso.dto.request.ForgotPasswordRequest;
 import com.vogulev.regreso.dto.request.LoginRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.dto.request.ResetPasswordRequest;
 import com.vogulev.regreso.dto.response.AuthResponse;
+import com.vogulev.regreso.dto.response.MessageResponse;
 
 /**
  * Сервис аутентификации и управления сессиями пользователей.
@@ -25,6 +28,22 @@ public interface AuthService {
      * @return ответ с access- и refresh-токенами
      */
     AuthResponse login(LoginRequest request);
+
+    /**
+     * Запрашивает код для восстановления пароля и отправляет его на email.
+     *
+     * @param request email практика
+     * @return универсальное сообщение без раскрытия существования email
+     */
+    MessageResponse requestPasswordReset(ForgotPasswordRequest request);
+
+    /**
+     * Подтверждает код восстановления и меняет пароль.
+     *
+     * @param request email, код и новый пароль
+     * @return сообщение об успешной смене пароля
+     */
+    MessageResponse confirmPasswordReset(ResetPasswordRequest request);
 
     /**
      * Обновляет access-токен по действующему refresh-токену.
