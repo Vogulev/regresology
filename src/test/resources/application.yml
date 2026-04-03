@@ -1,6 +1,9 @@
 spring:
   flyway:
     enabled: false
+  mail:
+    host: localhost
+    port: 1025
   mvc:
     throw-exception-if-no-handler-found: true
   web:
@@ -19,6 +22,11 @@ security:
     secret: test-secret-key-for-tests-minimum-32-chars-long
     expiration-ms: 86400000
     refresh-expiration-ms: 604800000
+
+app:
+  password-reset:
+    code-ttl-minutes: 15
+    mail-from: test@regreso.local
 
 telegram:
   bot:

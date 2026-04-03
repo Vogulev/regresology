@@ -32,6 +32,9 @@ public class Practitioner {
     private String lastName;
     private String phone;
 
+    @OneToOne(mappedBy = "practitioner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PasswordResetCode passwordResetCode;
+
     @Column(columnDefinition = "TEXT")
     private String bio;
 

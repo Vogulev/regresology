@@ -33,6 +33,18 @@ public record RefreshRequest(
     @NotBlank String refreshToken
 ) {}
 
+// POST /api/auth/forgot-password
+public record ForgotPasswordRequest(
+    @NotBlank @Email String email
+) {}
+
+// POST /api/auth/reset-password
+public record ResetPasswordRequest(
+    @NotBlank @Email String email,
+    @NotBlank @Pattern(regexp = "^\\d{6}$") String code,
+    @NotBlank @Size(min = 8, max = 72) String newPassword
+) {}
+
 // Response для login и refresh
 public record AuthResponse(
     String accessToken,
@@ -49,6 +61,10 @@ public record PractitionerShortResponse(
     String lastName,
     String plan,
     OffsetDateTime planExpiresAt
+) {}
+
+public record MessageResponse(
+    String message
 ) {}
 // =============================================
 // CLIENTS — request/response DTO

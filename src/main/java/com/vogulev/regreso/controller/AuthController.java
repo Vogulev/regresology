@@ -1,8 +1,11 @@
 package com.vogulev.regreso.controller;
 
+import com.vogulev.regreso.dto.request.ForgotPasswordRequest;
 import com.vogulev.regreso.dto.request.LoginRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.dto.request.ResetPasswordRequest;
 import com.vogulev.regreso.dto.response.AuthResponse;
+import com.vogulev.regreso.dto.response.MessageResponse;
 import com.vogulev.regreso.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.requestPasswordReset(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.confirmPasswordReset(request));
     }
 
     @PostMapping("/refresh")

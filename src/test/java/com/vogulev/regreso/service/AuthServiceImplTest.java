@@ -1,14 +1,20 @@
 package com.vogulev.regreso.service;
 
+import com.vogulev.regreso.dto.request.ForgotPasswordRequest;
 import com.vogulev.regreso.dto.request.LoginRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
+import com.vogulev.regreso.dto.request.ResetPasswordRequest;
 import com.vogulev.regreso.dto.response.AuthResponse;
+import com.vogulev.regreso.dto.response.MessageResponse;
+import com.vogulev.regreso.entity.PasswordResetCode;
 import com.vogulev.regreso.entity.Practitioner;
 import com.vogulev.regreso.exception.BusinessException;
 import com.vogulev.regreso.exception.ResourceNotFoundException;
+import com.vogulev.regreso.repository.PasswordResetCodeRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import com.vogulev.regreso.security.JwtService;
 import com.vogulev.regreso.security.PractitionerDetails;
+import com.vogulev.regreso.service.PasswordResetEmailService;
 import com.vogulev.regreso.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +28,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,9 +43,11 @@ import static org.mockito.Mockito.*;
 class AuthServiceImplTest {
 
     @Mock PractitionerRepository repository;
+    @Mock PasswordResetCodeRepository passwordResetCodeRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtService jwtService;
     @Mock AuthenticationManager authenticationManager;
+    @Mock PasswordResetEmailService passwordResetEmailService;
 
     @InjectMocks
     AuthServiceImpl authService;
@@ -105,6 +114,79 @@ class AuthServiceImplTest {
                 .isInstanceOf(BadCredentialsException.class);
     }
 
+    // ── password reset ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("requestPasswordReset — существующий email: сохраняет код и отправляет письмо")
+    void requestPasswordReset_withExistingEmail_shouldSaveCodeAndSendEmail() {
+        Practitioner practitioner = practitioner("user@example.com");
+        when(repository.findByEmail("user@example.com")).thenReturn(Optional.of(practitioner));
+        when(passwordResetCodeRepository.findByPractitioner(practitioner)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenAnswer(inv -> "encoded:" + inv.getArgument(0));
+
+        MessageResponse response = authService.requestPasswordReset(forgotPasswordRequest("user@example.com"));
+
+        assertThat(response.getMessage()).contains("мы отправили код");
+        verify(passwordResetCodeRepository).save(any(PasswordResetCode.class));
+        verify(passwordResetEmailService).sendResetCode(eq("user@example.com"), eq("Test"), anyString());
+    }
+
+    @Test
+    @DisplayName("requestPasswordReset — неизвестный email: возвращает тот же ответ и не отправляет письмо")
+    void requestPasswordReset_withUnknownEmail_shouldNotSendEmail() {
+        when(repository.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+
+        MessageResponse response = authService.requestPasswordReset(forgotPasswordRequest("ghost@example.com"));
+
+        assertThat(response.getMessage()).contains("мы отправили код");
+        verify(passwordResetCodeRepository, never()).save(any());
+        verify(passwordResetEmailService, never()).sendResetCode(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("confirmPasswordReset — корректный код: обновляет пароль и помечает код использованным")
+    void confirmPasswordReset_withValidCode_shouldUpdatePassword() {
+        Practitioner practitioner = practitioner("user@example.com");
+        PasswordResetCode resetCode = PasswordResetCode.builder()
+                .practitioner(practitioner)
+                .codeHash("encoded:123456")
+                .expiresAt(OffsetDateTime.now().plusMinutes(5))
+                .build();
+
+        when(repository.findByEmail("user@example.com")).thenReturn(Optional.of(practitioner));
+        when(passwordResetCodeRepository.findByPractitioner(practitioner)).thenReturn(Optional.of(resetCode));
+        when(passwordEncoder.matches("123456", "encoded:123456")).thenReturn(true);
+        when(passwordEncoder.encode("new-password")).thenReturn("encoded:new-password");
+
+        MessageResponse response = authService.confirmPasswordReset(
+                resetPasswordRequest("user@example.com", "123456", "new-password"));
+
+        assertThat(response.getMessage()).contains("успешно");
+        assertThat(practitioner.getPasswordHash()).isEqualTo("encoded:new-password");
+        assertThat(resetCode.getConsumedAt()).isNotNull();
+        verify(repository).save(practitioner);
+        verify(passwordResetCodeRepository).save(resetCode);
+    }
+
+    @Test
+    @DisplayName("confirmPasswordReset — истёкший код: BusinessException")
+    void confirmPasswordReset_withExpiredCode_shouldThrowBusinessException() {
+        Practitioner practitioner = practitioner("user@example.com");
+        PasswordResetCode resetCode = PasswordResetCode.builder()
+                .practitioner(practitioner)
+                .codeHash("encoded:123456")
+                .expiresAt(OffsetDateTime.now().minusMinutes(1))
+                .build();
+
+        when(repository.findByEmail("user@example.com")).thenReturn(Optional.of(practitioner));
+        when(passwordResetCodeRepository.findByPractitioner(practitioner)).thenReturn(Optional.of(resetCode));
+
+        assertThatThrownBy(() -> authService.confirmPasswordReset(
+                resetPasswordRequest("user@example.com", "123456", "new-password")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("истёк");
+    }
+
     // ── refresh ───────────────────────────────────────────────────────────────
 
     @Test
@@ -162,6 +244,20 @@ class AuthServiceImplTest {
         r.setEmail(email);
         r.setPassword(password);
         return r;
+    }
+
+    private ForgotPasswordRequest forgotPasswordRequest(String email) {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail(email);
+        return request;
+    }
+
+    private ResetPasswordRequest resetPasswordRequest(String email, String code, String newPassword) {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setEmail(email);
+        request.setCode(code);
+        request.setNewPassword(newPassword);
+        return request;
     }
 
     private Practitioner practitioner(String email) {
