@@ -119,6 +119,7 @@ jobs:
             update_env MAIL_USERNAME "${{ vars.MAIL_USERNAME }}"
             update_env MAIL_PASSWORD "${{ secrets.MAIL_PASSWORD }}"
             update_env MAIL_SMTP_AUTH "${{ vars.MAIL_SMTP_AUTH }}"
+            update_env MAIL_SMTP_SSL_ENABLE "${{ vars.MAIL_SMTP_SSL_ENABLE }}"
             update_env MAIL_SMTP_STARTTLS "${{ vars.MAIL_SMTP_STARTTLS }}"
             update_env PASSWORD_RESET_MAIL_FROM "${{ vars.PASSWORD_RESET_MAIL_FROM }}"
             update_env PASSWORD_RESET_CODE_TTL_MINUTES "${{ vars.PASSWORD_RESET_CODE_TTL_MINUTES }}"
