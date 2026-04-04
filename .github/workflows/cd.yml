@@ -66,6 +66,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Upload production compose
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          source: docker-compose.prod.yml
+          target: /opt/regreso
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
