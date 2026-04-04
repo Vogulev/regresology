@@ -82,6 +82,28 @@ jobs:
             IMAGE_REPOSITORY="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
             sed -i "s|^GITHUB_REPOSITORY=.*|GITHUB_REPOSITORY=${IMAGE_REPOSITORY}|" .env
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${IMAGE_SHA}/" .env
+            grep -q '^DB_NAME=' .env && sed -i "s|^DB_NAME=.*|DB_NAME=${{ vars.DB_NAME }}|" .env || echo "DB_NAME=${{ vars.DB_NAME }}" >> .env
+            grep -q '^DB_USER=' .env && sed -i "s|^DB_USER=.*|DB_USER=${{ vars.DB_USER }}|" .env || echo "DB_USER=${{ vars.DB_USER }}" >> .env
+            grep -q '^DB_PASSWORD=' .env && sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env || echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            grep -q '^JWT_SECRET=' .env && sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${{ secrets.JWT_SECRET }}|" .env || echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            grep -q '^MINIO_ACCESS_KEY=' .env && sed -i "s|^MINIO_ACCESS_KEY=.*|MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}|" .env || echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
+            grep -q '^MINIO_SECRET_KEY=' .env && sed -i "s|^MINIO_SECRET_KEY=.*|MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}|" .env || echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
+            grep -q '^MINIO_BUCKET=' .env && sed -i "s|^MINIO_BUCKET=.*|MINIO_BUCKET=${{ vars.MINIO_BUCKET }}|" .env || echo "MINIO_BUCKET=${{ vars.MINIO_BUCKET }}" >> .env
+            grep -q '^MINIO_PUBLIC_URL=' .env && sed -i "s|^MINIO_PUBLIC_URL=.*|MINIO_PUBLIC_URL=${{ vars.MINIO_PUBLIC_URL }}|" .env || echo "MINIO_PUBLIC_URL=${{ vars.MINIO_PUBLIC_URL }}" >> .env
+            grep -q '^TELEGRAM_BOT_ENABLED=' .env && sed -i "s|^TELEGRAM_BOT_ENABLED=.*|TELEGRAM_BOT_ENABLED=${{ vars.TELEGRAM_BOT_ENABLED }}|" .env || echo "TELEGRAM_BOT_ENABLED=${{ vars.TELEGRAM_BOT_ENABLED }}" >> .env
+            grep -q '^TELEGRAM_BOT_TOKEN=' .env && sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}|" .env || echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+            grep -q '^TELEGRAM_BOT_USERNAME=' .env && sed -i "s|^TELEGRAM_BOT_USERNAME=.*|TELEGRAM_BOT_USERNAME=${{ vars.TELEGRAM_BOT_USERNAME }}|" .env || echo "TELEGRAM_BOT_USERNAME=${{ vars.TELEGRAM_BOT_USERNAME }}" >> .env
+            grep -q '^AI_PROVIDER=' .env && sed -i "s|^AI_PROVIDER=.*|AI_PROVIDER=${{ vars.AI_PROVIDER }}|" .env || echo "AI_PROVIDER=${{ vars.AI_PROVIDER }}" >> .env
+            grep -q '^GEMINI_API_KEY=' .env && sed -i "s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}|" .env || echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+            grep -q '^CORS_ALLOWED_ORIGINS=' .env && sed -i "s|^CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=${{ vars.CORS_ALLOWED_ORIGINS }}|" .env || echo "CORS_ALLOWED_ORIGINS=${{ vars.CORS_ALLOWED_ORIGINS }}" >> .env
+            grep -q '^MAIL_HOST=' .env && sed -i "s|^MAIL_HOST=.*|MAIL_HOST=${{ vars.MAIL_HOST }}|" .env || echo "MAIL_HOST=${{ vars.MAIL_HOST }}" >> .env
+            grep -q '^MAIL_PORT=' .env && sed -i "s|^MAIL_PORT=.*|MAIL_PORT=${{ vars.MAIL_PORT }}|" .env || echo "MAIL_PORT=${{ vars.MAIL_PORT }}" >> .env
+            grep -q '^MAIL_USERNAME=' .env && sed -i "s|^MAIL_USERNAME=.*|MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}|" .env || echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+            grep -q '^MAIL_PASSWORD=' .env && sed -i "s|^MAIL_PASSWORD=.*|MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}|" .env || echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+            grep -q '^MAIL_SMTP_AUTH=' .env && sed -i "s|^MAIL_SMTP_AUTH=.*|MAIL_SMTP_AUTH=${{ vars.MAIL_SMTP_AUTH }}|" .env || echo "MAIL_SMTP_AUTH=${{ vars.MAIL_SMTP_AUTH }}" >> .env
+            grep -q '^MAIL_SMTP_STARTTLS=' .env && sed -i "s|^MAIL_SMTP_STARTTLS=.*|MAIL_SMTP_STARTTLS=${{ vars.MAIL_SMTP_STARTTLS }}|" .env || echo "MAIL_SMTP_STARTTLS=${{ vars.MAIL_SMTP_STARTTLS }}" >> .env
+            grep -q '^PASSWORD_RESET_MAIL_FROM=' .env && sed -i "s|^PASSWORD_RESET_MAIL_FROM=.*|PASSWORD_RESET_MAIL_FROM=${{ secrets.PASSWORD_RESET_MAIL_FROM }}|" .env || echo "PASSWORD_RESET_MAIL_FROM=${{ secrets.PASSWORD_RESET_MAIL_FROM }}" >> .env
+            grep -q '^PASSWORD_RESET_CODE_TTL_MINUTES=' .env && sed -i "s|^PASSWORD_RESET_CODE_TTL_MINUTES=.*|PASSWORD_RESET_CODE_TTL_MINUTES=${{ vars.PASSWORD_RESET_CODE_TTL_MINUTES }}|" .env || echo "PASSWORD_RESET_CODE_TTL_MINUTES=${{ vars.PASSWORD_RESET_CODE_TTL_MINUTES }}" >> .env
             
             # Логинимся в GHCR с PAT для pull на удалённом сервере
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
