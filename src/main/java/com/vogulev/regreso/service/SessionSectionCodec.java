@@ -45,6 +45,23 @@ public class SessionSectionCodec {
         return sections;
     }
 
+    public List<SessionSectionDto> instantiateTemplateSections(String templateJson) {
+        List<SessionSectionDto> template = (templateJson == null || templateJson.isBlank())
+                ? defaultSections()
+                : deserialize(templateJson);
+
+        return template.stream()
+                .map(section -> SessionSectionDto.builder()
+                        .id(UUID.randomUUID())
+                        .code(section.getCode())
+                        .title(section.getTitle())
+                        .content(section.getContent())
+                        .isDefault(section.getIsDefault())
+                        .position(section.getPosition())
+                        .build())
+                .toList();
+    }
+
     public List<SessionSectionDto> resolveSections(Session session) {
         if (session.getSectionsJson() != null && !session.getSectionsJson().isBlank()) {
             return deserialize(session.getSectionsJson());

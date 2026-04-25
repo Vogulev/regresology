@@ -1,10 +1,12 @@
 package com.vogulev.regreso.dto.response;
 
+import com.vogulev.regreso.dto.SessionSectionDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,6 +22,7 @@ public class ProfileSettingsResponse {
     private String bio;
     private String timezone;
     private Integer defaultSessionDurationMin;
+    private List<SessionSectionDto> sessionTemplateSections;
     private String photoUrl;
     private Long telegramChatId;
     private boolean telegramConnected;

@@ -63,6 +63,33 @@ public record PractitionerShortResponse(
     OffsetDateTime planExpiresAt
 ) {}
 
+public record ProfileSettingsRequest(
+    String firstName,
+    String lastName,
+    String phone,
+    String bio,
+    String timezone,
+    Integer defaultSessionDurationMin,
+    List<SessionSectionDto> sessionTemplateSections
+) {}
+
+public record ProfileSettingsResponse(
+    UUID id,
+    String email,
+    String firstName,
+    String lastName,
+    String phone,
+    String bio,
+    String timezone,
+    Integer defaultSessionDurationMin,
+    List<SessionSectionDto> sessionTemplateSections,
+    String photoUrl,
+    Long telegramChatId,
+    boolean telegramConnected,
+    String plan,
+    OffsetDateTime planExpiresAt
+) {}
+
 public record MessageResponse(
     String message
 ) {}

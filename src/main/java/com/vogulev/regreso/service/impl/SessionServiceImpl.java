@@ -70,7 +70,7 @@ public class SessionServiceImpl implements SessionService {
                 .preSessionRequest(request.getPreSessionRequest())
                 .price(request.getPrice())
                 .sectionsJson(sessionSectionCodec.serialize(sessionSectionCodec.mergeLegacyFields(
-                        sessionSectionCodec.defaultSections(),
+                        sessionSectionCodec.instantiateTemplateSections(practitioner.getSessionTemplateJson()),
                         Session.builder().preSessionRequest(request.getPreSessionRequest()).build()
                 )))
                 .build();

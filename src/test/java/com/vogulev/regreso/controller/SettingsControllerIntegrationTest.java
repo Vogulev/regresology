@@ -153,6 +153,43 @@ class SettingsControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.inactiveClientReminderDays").value(45));
     }
 
+    @Test
+    @DisplayName("GET/PUT /api/settings/profile сохраняет шаблон секций сессии практика")
+    void profile_shouldPersistSessionTemplateSections() throws Exception {
+        String token = registerAndGetToken("profile-template@test.com");
+
+        mockMvc.perform(get("/api/settings/profile")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionTemplateSections[0].title").value("Эмоциональное состояние в начале сеанса"));
+
+        mockMvc.perform(put("/api/settings/profile")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName": "Тест",
+                                  "defaultSessionDurationMin": 120,
+                                  "sessionTemplateSections": [
+                                    {
+                                      "code": "CONCERN",
+                                      "title": "Что Вас беспокоит?",
+                                      "content": "Базовый вопрос",
+                                      "isDefault": true
+                                    },
+                                    {
+                                      "title": "3 Жизнь",
+                                      "content": "",
+                                      "isDefault": false
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionTemplateSections.length()").value(2))
+                .andExpect(jsonPath("$.sessionTemplateSections[1].title").value("3 Жизнь"));
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private String registerAndGetToken(String email) throws Exception {
