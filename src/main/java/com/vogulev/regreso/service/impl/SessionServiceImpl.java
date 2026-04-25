@@ -12,6 +12,7 @@ import com.vogulev.regreso.exception.ResourceNotFoundException;
 import com.vogulev.regreso.mapper.SessionMapper;
 import com.vogulev.regreso.repository.*;
 import com.vogulev.regreso.service.FileStorageService;
+import com.vogulev.regreso.service.SessionSectionCodec;
 import com.vogulev.regreso.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,6 +44,7 @@ public class SessionServiceImpl implements SessionService {
     private final ApplicationEventPublisher eventPublisher;
     private final AiSummaryService aiSummaryService;
     private final FileStorageService fileStorageService;
+    private final SessionSectionCodec sessionSectionCodec;
 
     @Override
     public SessionResponse createSession(CreateSessionRequest request, UUID practitionerId) {
@@ -67,26 +69,30 @@ public class SessionServiceImpl implements SessionService {
                 .sessionNumber(sessionNumber)
                 .preSessionRequest(request.getPreSessionRequest())
                 .price(request.getPrice())
+                .sectionsJson(sessionSectionCodec.serialize(sessionSectionCodec.mergeLegacyFields(
+                        sessionSectionCodec.defaultSections(),
+                        Session.builder().preSessionRequest(request.getPreSessionRequest()).build()
+                )))
                 .build();
 
         session = sessionRepository.save(session);
         createReminders(session);
 
-        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
+        return enrichResponse(sessionMapper.toResponse(session), session);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SessionResponse getSession(UUID sessionId, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
-        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
+        return enrichResponse(sessionMapper.toResponse(session), session);
     }
 
     @Override
     public SessionResponse updateSession(UUID sessionId, UpdateSessionRequest request, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
         applyUpdate(session, request);
-        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
+        return enrichResponse(sessionMapper.toResponse(session), session);
     }
 
     @Override
@@ -105,7 +111,7 @@ public class SessionServiceImpl implements SessionService {
         }
         session.setStatus(Session.Status.COMPLETED);
 
-        SessionResponse response = enrichWithMedia(sessionMapper.toResponse(session), session.getId());
+        SessionResponse response = enrichResponse(sessionMapper.toResponse(session), session);
 
         // Публикуем событие для будущей AI-генерации саммари (асинхронно)
         eventPublisher.publishEvent(new SessionCompletedEvent(this, session.getId()));
@@ -129,7 +135,7 @@ public class SessionServiceImpl implements SessionService {
             session.setPractitionerNotes(request.getReason());
         }
 
-        return enrichWithMedia(sessionMapper.toResponse(session), session.getId());
+        return enrichResponse(sessionMapper.toResponse(session), session);
     }
 
     @Override
@@ -257,8 +263,9 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Сессия не найдена"));
     }
 
-    private SessionResponse enrichWithMedia(SessionResponse response, UUID sessionId) {
-        response.setMedia(getMediaResponses(sessionId));
+    private SessionResponse enrichResponse(SessionResponse response, Session session) {
+        response.setMedia(getMediaResponses(session.getId()));
+        response.setSections(sessionSectionCodec.resolveSections(session));
         return response;
     }
 
@@ -363,9 +370,29 @@ public class SessionServiceImpl implements SessionService {
         if (req.getPractitionerNotes() != null)  session.setPractitionerNotes(req.getPractitionerNotes());
         if (req.getNextSessionPlan() != null)    session.setNextSessionPlan(req.getNextSessionPlan());
 
+        if (req.getSections() != null) {
+            List<com.vogulev.regreso.dto.SessionSectionDto> normalizedSections = sessionSectionCodec.normalize(req.getSections());
+            sessionSectionCodec.syncLegacyFields(session, normalizedSections);
+            session.setSectionsJson(sessionSectionCodec.serialize(normalizedSections));
+        } else if (hasLegacySectionChanges(req) || session.getSectionsJson() == null || session.getSectionsJson().isBlank()) {
+            List<com.vogulev.regreso.dto.SessionSectionDto> mergedSections =
+                    sessionSectionCodec.mergeLegacyFields(sessionSectionCodec.resolveSections(session), session);
+            session.setSectionsJson(sessionSectionCodec.serialize(mergedSections));
+        }
+
         // Финансы
         if (req.getPrice() != null)              session.setPrice(req.getPrice());
         if (req.getIsPaid() != null)             session.setIsPaid(req.getIsPaid());
+    }
+
+    private boolean hasLegacySectionChanges(UpdateSessionRequest req) {
+        return req.getPreSessionRequest() != null
+                || req.getPreSessionState() != null
+                || req.getInductionNotes() != null
+                || req.getRegressionSetting() != null
+                || req.getKeyInsights() != null
+                || req.getIntegrationNotes() != null
+                || req.getPostSessionState() != null;
     }
 
     private void createReminders(Session session) {

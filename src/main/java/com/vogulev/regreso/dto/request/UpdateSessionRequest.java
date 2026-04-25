@@ -1,5 +1,6 @@
 package com.vogulev.regreso.dto.request;
 
+import com.vogulev.regreso.dto.SessionSectionDto;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -46,6 +47,8 @@ public class UpdateSessionRequest {
     // [7] Итог практика
     private String practitionerNotes;
     private String nextSessionPlan;
+
+    private List<SessionSectionDto> sections;
 
     // Финансы
     private BigDecimal price;

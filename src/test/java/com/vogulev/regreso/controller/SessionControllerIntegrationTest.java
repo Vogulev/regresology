@@ -2,6 +2,7 @@ package com.vogulev.regreso.controller;
 
 import tools.jackson.databind.json.JsonMapper;
 import com.vogulev.regreso.BaseIntegrationTest;
+import com.vogulev.regreso.dto.SessionSectionDto;
 import com.vogulev.regreso.dto.request.CancelSessionRequest;
 import com.vogulev.regreso.dto.request.CreateSessionRequest;
 import com.vogulev.regreso.dto.request.RegisterRequest;
@@ -83,7 +84,9 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.status").value("SCHEDULED"))
                     .andExpect(jsonPath("$.clientId").value(clientId))
                     .andExpect(jsonPath("$.durationMin").value(90))
-                    .andExpect(jsonPath("$.price").value(3000));
+                    .andExpect(jsonPath("$.price").value(3000))
+                    .andExpect(jsonPath("$.sections", hasSize(17)))
+                    .andExpect(jsonPath("$.sections[0].title").value("Эмоциональное состояние в начале сеанса"));
         }
 
         @Test
@@ -213,6 +216,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.status").value("SCHEDULED"))
                     .andExpect(jsonPath("$.clientId").value(clientId))
                     .andExpect(jsonPath("$.clientFullName").isNotEmpty())
+                    .andExpect(jsonPath("$.sections", hasSize(17)))
                     .andExpect(jsonPath("$.media").isArray())
                     .andExpect(jsonPath("$.media", hasSize(0)));
         }
@@ -415,7 +419,10 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.preSessionScore").value(4))
                     .andExpect(jsonPath("$.regressionTarget").value("PAST_LIFE"))
                     .andExpect(jsonPath("$.keyInsights").value("Инсайт о прошлой жизни"))
-                    .andExpect(jsonPath("$.practitionerNotes").value("Приватные заметки"));
+                    .andExpect(jsonPath("$.practitionerNotes").value("Приватные заметки"))
+                    .andExpect(jsonPath("$.sections[0].content").value("Тревожный"))
+                    .andExpect(jsonPath("$.sections[2].content").value("Страхи одиночества"))
+                    .andExpect(jsonPath("$.sections[15].content").value("Инсайт о прошлой жизни"));
         }
 
         @Test
@@ -491,6 +498,50 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.price").value(5000.00))
                     .andExpect(jsonPath("$.isPaid").value(true));
+        }
+
+        @Test
+        @DisplayName("можно заменить шаблон секций и добавить кастомную секцию")
+        void updateSections_shouldPersistCustomTemplate() throws Exception {
+            String token = registerAndGetToken("sections@test.com");
+            String clientId = createClient(token);
+            String sessionId = createSession(token, clientId);
+
+            UpdateSessionRequest req = new UpdateSessionRequest();
+            req.setSections(List.of(
+                    SessionSectionDto.builder()
+                            .code("CONCERN")
+                            .title("Что Вас беспокоит?")
+                            .content("Не могу расслабиться")
+                            .isDefault(true)
+                            .build(),
+                    SessionSectionDto.builder()
+                            .title("Дополнительная заметка практика")
+                            .content("Нужно проверить телесную реакцию")
+                            .isDefault(false)
+                            .build(),
+                    SessionSectionDto.builder()
+                            .code("EMOTIONAL_STATE_END")
+                            .title("Состояние регрессанта в конце сессии")
+                            .content("Спокойная и собранная")
+                            .isDefault(true)
+                            .build()
+            ));
+
+            mockMvc.perform(put("/api/sessions/{id}", sessionId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(toJson(req))
+                            .header("Authorization", "Bearer " + token))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sections", hasSize(3)))
+                    .andExpect(jsonPath("$.sections[0].position").value(1))
+                    .andExpect(jsonPath("$.sections[0].code").value("CONCERN"))
+                    .andExpect(jsonPath("$.sections[0].content").value("Не могу расслабиться"))
+                    .andExpect(jsonPath("$.sections[1].title").value("Дополнительная заметка практика"))
+                    .andExpect(jsonPath("$.sections[1].isDefault").value(false))
+                    .andExpect(jsonPath("$.sections[2].code").value("EMOTIONAL_STATE_END"))
+                    .andExpect(jsonPath("$.preSessionRequest").value("Не могу расслабиться"))
+                    .andExpect(jsonPath("$.postSessionState").value("Спокойная и собранная"));
         }
     }
 
