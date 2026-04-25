@@ -63,6 +63,33 @@ public record PractitionerShortResponse(
     OffsetDateTime planExpiresAt
 ) {}
 
+public record ProfileSettingsRequest(
+    String firstName,
+    String lastName,
+    String phone,
+    String bio,
+    String timezone,
+    Integer defaultSessionDurationMin,
+    List<SessionSectionDto> sessionTemplateSections
+) {}
+
+public record ProfileSettingsResponse(
+    UUID id,
+    String email,
+    String firstName,
+    String lastName,
+    String phone,
+    String bio,
+    String timezone,
+    Integer defaultSessionDurationMin,
+    List<SessionSectionDto> sessionTemplateSections,
+    String photoUrl,
+    Long telegramChatId,
+    boolean telegramConnected,
+    String plan,
+    OffsetDateTime planExpiresAt
+) {}
+
 public record MessageResponse(
     String message
 ) {}
@@ -212,6 +239,9 @@ public record UpdateSessionRequest(
     String practitionerNotes,
     String nextSessionPlan,
 
+    // Редактируемые секции протокола сессии
+    List<SessionSectionDto> sections,
+
     // Финансы
     BigDecimal price,
     Boolean isPaid
@@ -272,9 +302,19 @@ public record SessionResponse(
     BigDecimal price,
     boolean isPaid,
 
+    List<SessionSectionDto> sections,
     List<SessionMediaResponse> media,
     OffsetDateTime createdAt,
     OffsetDateTime updatedAt
+) {}
+
+public record SessionSectionDto(
+    UUID id,
+    String code,
+    String title,
+    String content,
+    boolean isDefault,
+    Integer position
 ) {}
 
 public record SessionMediaResponse(

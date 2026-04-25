@@ -8,6 +8,7 @@ import com.vogulev.regreso.exception.BusinessException;
 import com.vogulev.regreso.exception.TooManyRequestsException;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.SessionRepository;
+import com.vogulev.regreso.service.SessionSectionCodec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +44,8 @@ class AiSummaryServiceTest {
     SessionRepository sessionRepository;
     @Mock
     ClientRepository clientRepository;
+    @Mock
+    SessionSectionCodec sessionSectionCodec;
 
     @InjectMocks
     AiSummaryService service;
@@ -50,6 +54,7 @@ class AiSummaryServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(service, "minPromptLength", 100);
         ReflectionTestUtils.setField(service, "cooldownMinutes", 60);
+        lenient().when(sessionSectionCodec.buildPromptFromSections(any())).thenReturn("");
     }
 
     // ── doGenerateSessionSummary ───────────────────────────────────────────────

@@ -8,6 +8,7 @@ import com.vogulev.regreso.exception.ResourceNotFoundException;
 import com.vogulev.regreso.exception.TooManyRequestsException;
 import com.vogulev.regreso.repository.ClientRepository;
 import com.vogulev.regreso.repository.SessionRepository;
+import com.vogulev.regreso.service.SessionSectionCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,7 @@ public class AiSummaryService {
     private final AiProvider aiProvider;
     private final SessionRepository sessionRepository;
     private final ClientRepository clientRepository;
+    private final SessionSectionCodec sessionSectionCodec;
 
     @Value("${ai.summary.min-prompt-length:100}")
     private int minPromptLength;
@@ -108,6 +110,10 @@ public class AiSummaryService {
 
     private String buildSessionPrompt(Session session) {
         StringBuilder sb = new StringBuilder();
+        String sectionPrompt = sessionSectionCodec.buildPromptFromSections(session);
+        if (!sectionPrompt.isBlank()) {
+            sb.append(sectionPrompt).append("\n");
+        }
         if (session.getPreSessionRequest() != null && !session.getPreSessionRequest().isBlank()) {
             sb.append("Запрос клиента: ").append(session.getPreSessionRequest()).append("\n");
         }

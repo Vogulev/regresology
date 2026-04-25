@@ -1,5 +1,6 @@
 package com.vogulev.regreso.dto.response;
 
+import com.vogulev.regreso.dto.SessionSectionDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,6 +68,7 @@ public class SessionResponse {
     private BigDecimal price;
     private Boolean isPaid;
 
+    private List<SessionSectionDto> sections;
     private List<SessionMediaResponse> media;
 
     private OffsetDateTime createdAt;

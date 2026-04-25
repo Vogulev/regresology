@@ -2,7 +2,9 @@ package com.vogulev.regreso.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -43,6 +45,10 @@ public class Practitioner {
     private Long telegramChatId;
     @Builder.Default
     private Integer defaultSessionDurationMin = 120;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "session_template_json", columnDefinition = "jsonb")
+    private String sessionTemplateJson;
 
     @Builder.Default
     private Integer inactiveClientReminderDays = 0;

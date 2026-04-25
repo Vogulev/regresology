@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vogulev.regreso.dto.request.BookingSettingsRequest;
 import com.vogulev.regreso.dto.request.NotificationSettingsRequest;
 import com.vogulev.regreso.dto.request.ProfileSettingsRequest;
+import com.vogulev.regreso.dto.SessionSectionDto;
 import com.vogulev.regreso.dto.response.BookingAvailabilityMode;
 import com.vogulev.regreso.dto.response.BookingDayAvailabilityDto;
 import com.vogulev.regreso.dto.response.BookingServiceItemDto;
@@ -20,6 +21,7 @@ import com.vogulev.regreso.repository.BookingSettingsRepository;
 import com.vogulev.regreso.repository.CertificateRepository;
 import com.vogulev.regreso.repository.PractitionerRepository;
 import com.vogulev.regreso.service.FileStorageService;
+import com.vogulev.regreso.service.SessionSectionCodec;
 import com.vogulev.regreso.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ public class SettingsServiceImpl implements SettingsService {
     private final BookingSettingsRepository bookingSettingsRepository;
     private final CertificateRepository certificateRepository;
     private final FileStorageService fileStorageService;
+    private final SessionSectionCodec sessionSectionCodec;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,6 +64,9 @@ public class SettingsServiceImpl implements SettingsService {
         if (request.getBio() != null) p.setBio(request.getBio().isBlank() ? null : request.getBio().trim());
         if (request.getTimezone() != null && !request.getTimezone().isBlank()) p.setTimezone(request.getTimezone());
         if (request.getDefaultSessionDurationMin() != null) p.setDefaultSessionDurationMin(request.getDefaultSessionDurationMin());
+        if (request.getSessionTemplateSections() != null) {
+            p.setSessionTemplateJson(sessionSectionCodec.serialize(sessionSectionCodec.normalize(request.getSessionTemplateSections())));
+        }
         return toProfileResponse(practitionerRepository.save(p));
     }
 
@@ -194,11 +200,27 @@ public class SettingsServiceImpl implements SettingsService {
                 .photoUrl(p.getPhotoUrl())
                 .timezone(p.getTimezone())
                 .defaultSessionDurationMin(p.getDefaultSessionDurationMin())
+                .sessionTemplateSections(resolveSessionTemplateSections(p))
                 .telegramChatId(p.getTelegramChatId())
                 .telegramConnected(p.getTelegramChatId() != null)
                 .plan(p.getPlan() != null ? p.getPlan().name() : "FREE")
                 .planExpiresAt(p.getPlanExpiresAt())
                 .build();
+    }
+
+    private List<SessionSectionDto> resolveSessionTemplateSections(Practitioner practitioner) {
+        if (practitioner.getSessionTemplateJson() == null || practitioner.getSessionTemplateJson().isBlank()) {
+            return sessionSectionCodec.defaultSections();
+        }
+
+        try {
+            return sessionSectionCodec.normalize(MAPPER.readValue(
+                    practitioner.getSessionTemplateJson(),
+                    new TypeReference<List<SessionSectionDto>>() {}
+            ));
+        } catch (Exception ignored) {
+            return sessionSectionCodec.defaultSections();
+        }
     }
 
     private CertificateResponse toCertificateResponse(Certificate c) {

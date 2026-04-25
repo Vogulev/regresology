@@ -2,9 +2,11 @@ package com.vogulev.regreso.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -91,6 +93,10 @@ public class Session {
     // [7] Итог практика (приватные заметки — клиенту не показывать!)
     @Column(columnDefinition = "TEXT") private String practitionerNotes;
     @Column(columnDefinition = "TEXT") private String nextSessionPlan;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "sections_json", columnDefinition = "jsonb")
+    private String sectionsJson;
 
     // AI саммари
     @Column(columnDefinition = "TEXT")
