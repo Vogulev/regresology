@@ -50,6 +50,7 @@ public class MinioFileStorageService implements FileStorageService {
     private String bucket;
 
     private MinioClient minioClient;
+    private boolean available;
 
     @PostConstruct
     public void init() {
@@ -57,12 +58,20 @@ public class MinioFileStorageService implements FileStorageService {
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .build();
-        ensureBucketExists();
-        log.info("MinIO storage initialized. Endpoint: {}, PublicUrl: {}, Bucket: {}", endpoint, publicUrl, bucket);
+        available = ensureBucketExists();
+        if (available) {
+            log.info("MinIO storage initialized. Endpoint: {}, PublicUrl: {}, Bucket: {}", endpoint, publicUrl, bucket);
+        } else {
+            log.error("MinIO storage is unavailable. Endpoint: {}, PublicUrl: {}, Bucket: {}", endpoint, publicUrl, bucket);
+        }
     }
 
     @Override
     public String store(MultipartFile file, String folder) throws IOException {
+        if (!available) {
+            throw new IOException("MinIO storage is unavailable");
+        }
+
         String extension = getExtension(file.getOriginalFilename());
         String objectName = folder + "/" + UUID.randomUUID() + (extension.isEmpty() ? "" : "." + extension);
 
@@ -127,7 +136,7 @@ public class MinioFileStorageService implements FileStorageService {
         return null;
     }
 
-    private void ensureBucketExists() {
+    private boolean ensureBucketExists() {
         try {
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!exists) {
@@ -139,8 +148,10 @@ public class MinioFileStorageService implements FileStorageService {
                         .build());
                 log.info("Created MinIO bucket: {}", bucket);
             }
+            return true;
         } catch (Exception e) {
             log.error("Failed to initialize MinIO bucket '{}': {}", bucket, e.getMessage(), e);
+            return false;
         }
     }
 
