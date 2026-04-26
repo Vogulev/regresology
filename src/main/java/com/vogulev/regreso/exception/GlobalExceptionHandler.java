@@ -8,8 +8,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,6 +80,20 @@ public class GlobalExceptionHandler {
         log.warn("Invalid JWT token: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ErrorResponse("Невалидный или просроченный токен"));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        log.warn("Upload rejected: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(new ErrorResponse("Файл слишком большой. Максимальный размер файла — 10 МБ"));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(IOException ex) {
+        log.warn("File operation failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse("Не удалось сохранить файл. Попробуйте позже"));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
