@@ -3,8 +3,10 @@ package com.vogulev.regreso.config;
 import com.vogulev.regreso.bot.BotUpdateHandler;
 import com.vogulev.regreso.bot.RegresoBot;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.EventListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -32,10 +34,25 @@ public class TelegramBotConfig {
     }
 
     @Bean
-    public TelegramBotsApi telegramBotsApi(RegresoBot bot) throws TelegramApiException {
-        TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
-        api.registerBot(bot);
-        log.info("Telegram бот @{} запущен", username);
-        return api;
+    public TelegramBotsApi telegramBotsApi() throws TelegramApiException {
+        return new TelegramBotsApi(DefaultBotSession.class);
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void registerTelegramBot(ApplicationReadyEvent event) {
+        TelegramBotsApi api = event.getApplicationContext().getBean(TelegramBotsApi.class);
+        RegresoBot bot = event.getApplicationContext().getBean(RegresoBot.class);
+
+        Thread registrationThread = new Thread(() -> {
+            try {
+                api.registerBot(bot);
+                log.info("Telegram бот @{} запущен", username);
+            } catch (Exception e) {
+                log.warn("Telegram бот @{} недоступен: {}. Приложение продолжает работу без Telegram",
+                        username, e.getMessage());
+            }
+        }, "telegram-bot-registration");
+        registrationThread.setDaemon(true);
+        registrationThread.start();
     }
 }
