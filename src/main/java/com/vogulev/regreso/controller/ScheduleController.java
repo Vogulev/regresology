@@ -92,6 +92,7 @@ public class ScheduleController {
                 .clientFullName(s.getClient().getFullName())
                 .clientHasContraindications(Boolean.TRUE.equals(s.getClient().getHasContraindications()))
                 .sessionNumber(s.getSessionNumber() != null ? s.getSessionNumber() : 0)
+                .title(s.getTitle())
                 .scheduledAt(s.getScheduledAt())
                 .durationMin(s.getDurationMin() != null ? s.getDurationMin() : 120)
                 .status(s.getStatus() != null ? s.getStatus().name() : null)

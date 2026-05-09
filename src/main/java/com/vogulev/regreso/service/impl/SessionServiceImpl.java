@@ -66,6 +66,7 @@ public class SessionServiceImpl implements SessionService {
                 .client(client)
                 .scheduledAt(request.getScheduledAt())
                 .durationMin(durationMin)
+                .title(normalizeTitle(request.getTitle()))
                 .sessionNumber(sessionNumber)
                 .preSessionRequest(request.getPreSessionRequest())
                 .price(request.getPrice())
@@ -330,6 +331,7 @@ public class SessionServiceImpl implements SessionService {
     private void applyUpdate(Session session, UpdateSessionRequest req) {
         if (req.getScheduledAt() != null)       session.setScheduledAt(req.getScheduledAt());
         if (req.getDurationMin() != null)        session.setDurationMin(req.getDurationMin());
+        if (req.getTitle() != null)              session.setTitle(normalizeTitle(req.getTitle()));
 
         // [1]
         if (req.getPreSessionRequest() != null)  session.setPreSessionRequest(req.getPreSessionRequest());
@@ -393,6 +395,14 @@ public class SessionServiceImpl implements SessionService {
                 || req.getKeyInsights() != null
                 || req.getIntegrationNotes() != null
                 || req.getPostSessionState() != null;
+    }
+
+    private String normalizeTitle(String title) {
+        if (title == null) {
+            return null;
+        }
+        String trimmed = title.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void createReminders(Session session) {

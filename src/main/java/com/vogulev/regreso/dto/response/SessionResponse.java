@@ -28,6 +28,7 @@ public class SessionResponse {
 
     private OffsetDateTime scheduledAt;
     private int durationMin;
+    private String title;
 
     // [1] Перед
     private String preSessionRequest;

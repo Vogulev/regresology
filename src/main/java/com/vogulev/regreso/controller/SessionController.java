@@ -66,7 +66,7 @@ public class SessionController {
     @PutMapping("/{id}")
     public ResponseEntity<SessionResponse> updateSession(
             @PathVariable UUID id,
-            @RequestBody UpdateSessionRequest request,
+            @Valid @RequestBody UpdateSessionRequest request,
             @AuthenticationPrincipal PractitionerDetails user) {
         return ResponseEntity.ok(sessionService.updateSession(id, request, user.getId()));
     }
@@ -74,7 +74,7 @@ public class SessionController {
     @PostMapping("/{id}/complete")
     public ResponseEntity<SessionResponse> completeSession(
             @PathVariable UUID id,
-            @RequestBody(required = false) UpdateSessionRequest request,
+            @Valid @RequestBody(required = false) UpdateSessionRequest request,
             @AuthenticationPrincipal PractitionerDetails user) {
         return ResponseEntity.ok(sessionService.completeSession(id, request, user.getId()));
     }

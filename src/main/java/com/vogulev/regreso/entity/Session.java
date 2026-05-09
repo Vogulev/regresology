@@ -41,6 +41,9 @@ public class Session {
     @Builder.Default
     private Integer durationMin = 120;
 
+    @Column(length = 255)
+    private String title;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Status status = Status.SCHEDULED;

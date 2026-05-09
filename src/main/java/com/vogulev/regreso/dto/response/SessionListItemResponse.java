@@ -17,6 +17,7 @@ public class SessionListItemResponse {
 
     private UUID id;
     private Integer sessionNumber;
+    private String title;
     private String status;
     private OffsetDateTime scheduledAt;
     private Integer durationMin;
