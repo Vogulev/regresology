@@ -195,6 +195,7 @@ public record CreateSessionRequest(
     @NotNull UUID clientId,
     @NotNull OffsetDateTime scheduledAt,
     Integer durationMin,       // default: из настроек практика (120)
+    String title,              // краткое название/тема сессии, max 255
     String preSessionRequest,  // запрос клиента можно задать заранее
     BigDecimal price
 ) {}
@@ -203,6 +204,7 @@ public record CreateSessionRequest(
 public record UpdateSessionRequest(
     OffsetDateTime scheduledAt,
     Integer durationMin,
+    String title,              // краткое название/тема сессии, max 255
 
     // [1] Перед
     String preSessionRequest,
@@ -269,6 +271,7 @@ public record SessionResponse(
 
     OffsetDateTime scheduledAt,
     int durationMin,
+    String title,
 
     // Все поля протокола
     String preSessionRequest,
@@ -349,6 +352,7 @@ public record SessionListItemResponse(
     String status,
     OffsetDateTime scheduledAt,
     int durationMin,
+    String title,              // краткое название/тема сессии
     String preSessionRequest,   // краткий запрос
     String regressionTarget,
     String keyInsights,         // превью инсайтов
@@ -426,6 +430,7 @@ public record ScheduleSessionItem(
     String clientFullName,
     boolean clientHasContraindications,
     int sessionNumber,          // "3-я сессия"
+    String title,               // краткое название/тема сессии
     OffsetDateTime scheduledAt,
     int durationMin,
     String status,

@@ -19,6 +19,7 @@ public class ScheduleSessionItem {
     private String clientFullName;
     private boolean clientHasContraindications;
     private int sessionNumber;
+    private String title;
     private OffsetDateTime scheduledAt;
     private int durationMin;
     private String status;

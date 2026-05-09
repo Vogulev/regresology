@@ -1,6 +1,7 @@
 package com.vogulev.regreso.dto.request;
 
 import com.vogulev.regreso.dto.SessionSectionDto;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -12,6 +13,8 @@ public class UpdateSessionRequest {
 
     private OffsetDateTime scheduledAt;
     private Integer durationMin;
+    @Size(max = 255)
+    private String title;
 
     // [1] Перед сессией
     private String preSessionRequest;

@@ -84,6 +84,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.status").value("SCHEDULED"))
                     .andExpect(jsonPath("$.clientId").value(clientId))
                     .andExpect(jsonPath("$.durationMin").value(90))
+                    .andExpect(jsonPath("$.title").value("Страх публичных выступлений"))
                     .andExpect(jsonPath("$.price").value(3000))
                     .andExpect(jsonPath("$.sections", hasSize(17)))
                     .andExpect(jsonPath("$.sections[0].title").value("Эмоциональное состояние в начале сеанса"));
@@ -402,6 +403,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
             String sessionId = createSession(token, clientId);
 
             UpdateSessionRequest req = new UpdateSessionRequest();
+            req.setTitle("Работа со страхом одиночества");
             req.setPreSessionRequest("Страхи одиночества");
             req.setPreSessionState("Тревожный");
             req.setPreSessionScore((short) 4);
@@ -415,6 +417,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.preSessionRequest").value("Страхи одиночества"))
+                    .andExpect(jsonPath("$.title").value("Работа со страхом одиночества"))
                     .andExpect(jsonPath("$.preSessionState").value("Тревожный"))
                     .andExpect(jsonPath("$.preSessionScore").value(4))
                     .andExpect(jsonPath("$.regressionTarget").value("PAST_LIFE"))
@@ -865,6 +868,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
         req.setClientId(clientId);
         req.setScheduledAt(OffsetDateTime.of(2025, 6, 15, 10, 0, 0, 0, ZoneOffset.UTC));
         req.setDurationMin(90);
+        req.setTitle("Страх публичных выступлений");
         req.setPrice(new BigDecimal("3000.00"));
         return req;
     }
