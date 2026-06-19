@@ -16,7 +16,9 @@ public class MaterialListItemResponse {
 
     private UUID id;
     private String title;
+    private String description;
     private String materialType;
+    private String content;
     private String fileUrl;
     private String fileName;
     private String mimeType;
