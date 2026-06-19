@@ -18,7 +18,7 @@ import java.util.UUID;
 public class SessionSummaryStatusResponse {
 
     private UUID sessionId;
-    private String status; // PENDING | READY | FAILED
+    private String status; // PENDING | READY | FAILED | SKIPPED
     private String summary;
     private OffsetDateTime generatedAt;
 }

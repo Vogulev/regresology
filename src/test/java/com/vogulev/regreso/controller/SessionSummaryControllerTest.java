@@ -53,8 +53,8 @@ class SessionSummaryControllerTest extends BaseIntegrationTest {
     class GetSessionSummary {
 
         @Test
-        @DisplayName("ai_summary = null → 200 PENDING")
-        void nullSummary_returnsPending() throws Exception {
+        @DisplayName("ai_summary = null и пустой протокол → 200 SKIPPED")
+        void nullSummaryEmptySession_returnsSkipped() throws Exception {
             String token = registerAndGetToken("summary@test.com");
             String clientId = createClient(token);
             String sessionId = createSession(token, clientId);
@@ -63,7 +63,7 @@ class SessionSummaryControllerTest extends BaseIntegrationTest {
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sessionId").value(sessionId))
-                    .andExpect(jsonPath("$.status").value("PENDING"))
+                    .andExpect(jsonPath("$.status").value("SKIPPED"))
                     .andExpect(jsonPath("$.summary").doesNotExist());
         }
 

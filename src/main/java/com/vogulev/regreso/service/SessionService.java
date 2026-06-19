@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Сервис для управления сессиями регрессионной терапии.
- * Обеспечивает полный жизненный цикл сессии: создание, заполнение протокола,
+ * Обеспечивает полный жизненный цикл сессии: создание, заполнение сессии,
  * завершение, отмену, а также подготовку и генерацию AI-резюме.
  */
 public interface SessionService {
@@ -33,26 +33,26 @@ public interface SessionService {
      *
      * @param sessionId      идентификатор сессии
      * @param practitionerId идентификатор практика
-     * @return данные сессии с протоколом
+     * @return данные сессии
      */
     SessionResponse getSession(UUID sessionId, UUID practitionerId);
 
     /**
-     * Обновляет данные протокола сессии (автосохранение).
+     * Обновляет данные сессии (автосохранение).
      *
      * @param sessionId      идентификатор сессии
-     * @param request        обновлённые данные протокола
+     * @param request        обновлённые данные сессии
      * @param practitionerId идентификатор практика
      * @return обновлённые данные сессии
      */
     SessionResponse updateSession(UUID sessionId, UpdateSessionRequest request, UUID practitionerId);
 
     /**
-     * Завершает сессию и сохраняет финальные данные протокола.
+     * Завершает сессию и сохраняет финальные данные сессии.
      * После завершения автоматически запускается генерация AI-резюме.
      *
      * @param sessionId      идентификатор сессии
-     * @param request        финальные данные протокола
+     * @param request        финальные данные сессии
      * @param practitionerId идентификатор практика
      * @return данные завершённой сессии
      */
@@ -89,7 +89,7 @@ public interface SessionService {
     SessionSummaryStatusResponse getSessionSummary(UUID sessionId, UUID practitionerId);
 
     /**
-     * Запускает асинхронную генерацию AI-резюме по протоколу сессии.
+     * Запускает асинхронную генерацию AI-резюме по сессии.
      *
      * @param sessionId      идентификатор сессии
      * @param practitionerId идентификатор практика
@@ -97,7 +97,7 @@ public interface SessionService {
     void triggerSessionSummaryGeneration(UUID sessionId, UUID practitionerId);
 
     /**
-     * Загружает фото рукописного протокола или других материалов к сессии.
+     * Загружает фото рукописной сессии или других материалов к сессии.
      *
      * @param sessionId      идентификатор сессии
      * @param file           изображение
@@ -110,7 +110,7 @@ public interface SessionService {
             throws IOException;
 
     /**
-     * Удаляет фото протокола из сессии.
+     * Удаляет фото из сессии.
      *
      * @param sessionId      идентификатор сессии
      * @param mediaId        идентификатор фото
