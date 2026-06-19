@@ -200,7 +200,7 @@ public record CreateSessionRequest(
     BigDecimal price
 ) {}
 
-// PUT /api/sessions/{id} — обновить протокол (частично, любые поля)
+// PUT /api/sessions/{id} — обновить сессию (частично, любые поля)
 public record UpdateSessionRequest(
     OffsetDateTime scheduledAt,
     Integer durationMin,
@@ -241,7 +241,7 @@ public record UpdateSessionRequest(
     String practitionerNotes,
     String nextSessionPlan,
 
-    // Редактируемые секции протокола сессии
+    // Редактируемые секции сессии
     List<SessionSectionDto> sections,
 
     // Финансы
@@ -258,7 +258,7 @@ public record CancelSessionRequest(
     String reason  // опционально
 ) {}
 
-// GET /api/sessions/{id} — полный протокол
+// GET /api/sessions/{id} — полная сессия
 public record SessionResponse(
     UUID id,
     int sessionNumber,
@@ -273,7 +273,7 @@ public record SessionResponse(
     int durationMin,
     String title,
 
-    // Все поля протокола
+    // Все поля сессии
     String preSessionRequest,
     String preSessionState,
     Short preSessionScore,
@@ -332,7 +332,7 @@ public record SessionMediaResponse(
     OffsetDateTime createdAt
 ) {}
 
-// POST /api/sessions/{id}/photos — загрузить фото рукописного протокола
+// POST /api/sessions/{id}/photos — загрузить фото рукописной сессии
 // multipart/form-data:
 // - file: image/*
 // - caption: optional
@@ -342,7 +342,7 @@ public record SessionMediaResponse(
 // После загрузки файл сразу должен появляться в SessionResponse.media на экране сессии.
 // Фронтенд может вызывать endpoint последовательно для множественной загрузки нескольких файлов.
 //
-// DELETE /api/sessions/{id}/photos/{mediaId} — удалить фото протокола
+// DELETE /api/sessions/{id}/photos/{mediaId} — удалить фото сессии
 // Ответ: 204 No Content
 
 // GET /api/sessions/{id} — лёгкая версия для списков

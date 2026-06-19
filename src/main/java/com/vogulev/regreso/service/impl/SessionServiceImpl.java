@@ -212,10 +212,18 @@ public class SessionServiceImpl implements SessionService {
     public SessionSummaryStatusResponse getSessionSummary(UUID sessionId, UUID practitionerId) {
         Session session = findSessionOrThrow(sessionId, practitionerId);
 
-        boolean ready = session.getAiSummary() != null;
+        String status;
+        if (session.getAiSummary() != null) {
+            status = "READY";
+        } else if (!aiSummaryService.hasEnoughContentForSummary(session)) {
+            status = "SKIPPED";
+        } else {
+            status = "PENDING";
+        }
+
         return SessionSummaryStatusResponse.builder()
                 .sessionId(session.getId())
-                .status(ready ? "READY" : "PENDING")
+                .status(status)
                 .summary(session.getAiSummary())
                 .generatedAt(session.getAiSummaryGeneratedAt())
                 .build();
@@ -251,7 +259,7 @@ public class SessionServiceImpl implements SessionService {
         findSessionOrThrow(sessionId, practitionerId);
 
         SessionMedia media = sessionMediaRepository.findByIdAndSessionId(mediaId, sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Фото протокола не найдено"));
+                .orElseThrow(() -> new ResourceNotFoundException("Фото сессии не найдено"));
 
         sessionMediaRepository.delete(media);
         fileStorageService.delete(media.getFileKey());
@@ -306,7 +314,7 @@ public class SessionServiceImpl implements SessionService {
                 || filename.endsWith(".heif");
 
         if (!supportedByMime && !supportedByExtension) {
-            throw new BusinessException("Можно загружать только изображения протокола");
+            throw new BusinessException("Можно загружать только изображения сессии");
         }
     }
 

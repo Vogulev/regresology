@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class AiSummaryService {
 
     private static final String SESSION_SYSTEM_PROMPT = """
-            Ты помощник регрессолога. На основе протокола сессии напиши краткое саммари \
+            Ты помощник регрессолога. На основе сессии напиши краткое саммари \
             (5-8 предложений) на русском языке.
             Стиль: профессиональный, от третьего лица. Без воды. Только суть.
             Структура: с чем пришёл клиент → куда ушёл в регрессии → \
@@ -82,6 +82,14 @@ public class AiSummaryService {
     @Transactional
     public void generateSessionSummaryAsync(UUID sessionId) {
         doGenerateSessionSummary(sessionId);
+    }
+
+    /**
+     * Проверяет, достаточно ли заполнена сессия для генерации саммари.
+     * Используется, чтобы не оставлять статус в вечном PENDING при пустом протоколе.
+     */
+    public boolean hasEnoughContentForSummary(Session session) {
+        return buildSessionPrompt(session).length() >= minPromptLength;
     }
 
     private void doGenerateSessionSummary(UUID sessionId) {

@@ -204,7 +204,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("существующая сессия → 200 с полным протоколом")
+        @DisplayName("существующая сессия → 200 с полной сессией")
         void existingSession_shouldReturn200() throws Exception {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
@@ -253,7 +253,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
     class UploadSessionPhoto {
 
         @Test
-        @DisplayName("загрузка фото протокола → 201 и фото видно в GET сессии")
+        @DisplayName("загрузка фото сессии → 201 и фото видно в GET сессии")
         void uploadPhoto_shouldReturn201() throws Exception {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
@@ -327,7 +327,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("удаление фото протокола → 204 и фото исчезает из GET сессии")
+        @DisplayName("удаление фото сессии → 204 и фото исчезает из GET сессии")
         void deletePhoto_shouldReturn204() throws Exception {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
@@ -396,7 +396,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
     class UpdateSession {
 
         @Test
-        @DisplayName("обновление полей протокола → 200")
+        @DisplayName("обновление полей сессии → 200")
         void updateProtocol_shouldReturn200() throws Exception {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
@@ -790,8 +790,8 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
     class GetSessionSummary {
 
         @Test
-        @DisplayName("саммари → 200 PENDING (AI не подключён)")
-        void summary_shouldReturn200Pending() throws Exception {
+        @DisplayName("пустой протокол → 200 SKIPPED (недостаточно данных)")
+        void summary_shouldReturn200Skipped() throws Exception {
             String token = registerAndGetToken("user@test.com");
             String clientId = createClient(token);
             String sessionId = createSession(token, clientId);
@@ -800,7 +800,7 @@ class SessionControllerIntegrationTest extends BaseIntegrationTest {
                             .header("Authorization", "Bearer " + token))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sessionId").value(sessionId))
-                    .andExpect(jsonPath("$.status").value("PENDING"))
+                    .andExpect(jsonPath("$.status").value("SKIPPED"))
                     .andExpect(jsonPath("$.summary").doesNotExist());
         }
 
