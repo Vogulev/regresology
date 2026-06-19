@@ -12,10 +12,12 @@ import com.vogulev.regreso.service.SessionSectionCodec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -67,10 +69,13 @@ public class AiSummaryService {
 
     /**
      * Автозапуск при завершении сессии.
+     * Слушаем фазу AFTER_COMMIT, чтобы async-генерация стартовала только после
+     * фиксации транзакции completeSession — иначе отдельный поток читал бы сессию
+     * со старым статусом и мог перезаписать её обратно в SCHEDULED.
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async("aiExecutor")
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onSessionCompleted(SessionCompletedEvent event) {
         doGenerateSessionSummary(event.getSessionId());
     }
